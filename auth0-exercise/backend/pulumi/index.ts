@@ -1,16 +1,37 @@
-// Copyright 2016-2019, Pulumi Corporation.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * WHAT IS CREATED
+ * This file creates:
+ * - API gateway, 
+ * - customized authorizer Lambda function that uses Auth0
+ * - Lambda function that handles the API requests
+ * - DynamoDB for the backend database
+ * 
+ * INITIAL SETUP
+ * 1) Auth0: Create API
+ * 2) Go to quickstart and select node.js
+ * 3) Note the jwksUri, audience, issuer and create pulumi config set --secret for these:
+ *    e.g. pulumi config set --secret issuer https://goo.auth0.com
+ * 
+ * TESTING with POSTMAN
+ * Authentication:
+ * POST to the auth0 authenticator.
+ * Look at API's Test tab for values to use and create an POST with this body:
+ * {
+	"client_id": "{{CLIENT_ID}}",
+	"client_secret": "{{CLIENT_SECRET}}",
+	"audience": "{{AUDIENCE}}",
+	"grant_type": "client_credentials"
+   }
+ * 
+ * Using the API:
+ * 1) Look at API gateway in AWS and got to the stage and copy the URL
+ * 2) Create a GET to that URL/<resoruce> (e.g. https://URL/customers)
+ * 3) Set Authorization Token to the ACCESS_TOKEN returned by the authentication above.
+ * 4) Run the GET and you should see output commensurate with the event handler code below.
+ */
+
+
+
 import * as awsx from "@pulumi/awsx";
 import * as pulumi from "@pulumi/pulumi";
 
@@ -30,7 +51,7 @@ const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
     catch (err) {
         console.log(err);
         // Tells API Gateway to return a 401 Unauthorized response
-        throw new Error("Unauthorized");
+        throw new Error("Unauthorized "+JSON.stringify(err));
     }
 };
 

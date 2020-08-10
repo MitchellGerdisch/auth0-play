@@ -1,0 +1,8 @@
+config:
+  auth0:audience:
+    secure: AAABAGwvDNp6tffHrnReN1R+oFibrndbochmsqlVf1kuo87XyEK1d4q+n3I2wp7+zJMDokhH2Juh
+  auth0:issuer:
+    secure: AAABADctx+fgYdsyWmb2FvAzzNfD9cTeWZF1JMun1dlIVyBaTnP6deA0SGdOnpOWyqXdldm9pyEWKSyCpA==
+  auth0:jwksUri:
+    secure: AAABAGS6ZTBIVn7RTqL0BA90wrtxQKAAmf0jCTtr2wISGY+IDtJnNBbxU2v6bfEOe3IQ+t9HuXTnMF4152U5tKP9x3zTiJbGrKW+pDMRSOo3nA==
+  aws:region: us-east-1

@@ -1,0 +1,3 @@
+name: auth0
+runtime: nodejs
+description: Backend config for Auth0 exercise

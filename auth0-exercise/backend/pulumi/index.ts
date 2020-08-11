@@ -44,6 +44,27 @@ const jwksUri = config.require("jwksUri");
 const audience = config.require("audience");
 const issuer = config.require("issuer");
 
+// Create DynamoDB table to store the customer information
+const dbTableName = "pizza42-customers" 
+const fileTable = new aws.dynamodb.Table(dbTableName, {
+    attributes: [
+        {
+            name: "email",
+            type: "S",
+        },
+    ],
+    billingMode: "PROVISIONED",
+    hashKey: "email",
+    readCapacity: 5,
+    writeCapacity: 5,
+    ttl: {
+        attributeName: "TimeToExist",
+        enabled: false,
+    },
+    name: dbTableName, // assures the table name is known. to-do: figure out how to use generated table name in the magic function.
+});
+
+// Build API gateway and related Lambda custom authorizer and event handler
 const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
     try {
         return await authenticate(event);
@@ -74,14 +95,47 @@ const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
     ......
     */
 const api = new awsx.apigateway.API("auth0-exercise-api", {
-    routes: [{
+    routes: [
+        {
         path: "/customers",
-        method: "GET",
+        method: "POST",
         eventHandler: async (event) => {
             console.log("request: " + JSON.stringify(event));
+           /* 
+
+
+
+
+            const dbClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'})
+            // DynamoDB entry
+            let dbParams = {
+                Item: {
+                    ObjectKey: cleanKey,
+                    TimeStamp: eventTime,
+                },
+                TableName: dbTableName,
+            }
+            console.log("Push dbParams",dbParams)
+
+            // Push the DB entry
+            await dbClient.put(dbParams, function(err, data) {
+                if (err) {
+                    console.log("DB PUT ERROR",err);
+                } else {
+                    console.log("DB PUT SUCCESS", "TABLE: "+dbTableName, "KEY: "+cleanKey, "TIME: "+eventTime);
+                };
+            });
+
+
+
+
+
+
+
+            */
             return {
                 statusCode: 200,
-                body: "check lambda logs"
+                body: "check lambda logs for POST event"
             };
         },
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({

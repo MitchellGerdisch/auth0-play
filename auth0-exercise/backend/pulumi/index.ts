@@ -35,9 +35,10 @@
 import * as awsx from "@pulumi/awsx";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
+import * as AWS from "aws-sdk";
 
 import * as jwt from "jsonwebtoken";
-import * as jwksClient from "@types/jwks-rsa";
+import * as jwksClient from "jwks-rsa";
 import * as util from "util";
 
 const config = new pulumi.Config();
@@ -121,15 +122,49 @@ const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
             });
 */
 
+
+// Gets specific customer from DB 
+ async function getCustomer(dbName: string, keyValue: string) {
+    const dbClient = new AWS.DynamoDB.DocumentClient();
+    // DynamoDB entry
+    let dbParams = {
+        Key: {
+            email: keyValue, 
+        },
+        TableName: dbName,
+    }
+    console.log("GET dbParams",dbParams)
+
+    // get the DB entry
+    let response = {};
+   const tableItem = await dbClient.get(dbParams, function(err, data) {
+        if (err) {
+            console.log("DB GET ERROR",err);
+        } else {
+            console.log("DB GET SUCCESS", data);
+            response = data;
+        };
+    }).promise();
+    console.log("info", JSON.stringify(tableItem));
+    return response;
+}
+
+
+
 const api = new awsx.apigateway.API("auth0-exercise-api", {
     routes: [
     {
         path: "/customers/{customerId+}",
         method: "GET",
         eventHandler: async (event) => {
+            let params = event.pathParameters || {}; // params
+            let email = params.customerId || "";
+            console.log("event", JSON.stringify(event));
+            console.log("params", JSON.stringify(params));
+            let result = await getCustomer(dbTableName, email);
             return {
                 statusCode: 200,
-                body: "request: "+JSON.stringify(event)
+                body: JSON.stringify(result)
             };
         },
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
@@ -144,8 +179,8 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
         path: "/customers",
         method: "POST",
         eventHandler: async (event) => {
-            let body = event.body || ""; // Body is base64 envoded
-            let decodedBody = new Buffer.from(body, 'base64').toString('ascii'); // decode from base64 to string json
+            let body = event.body || ""; // Body is base64 encoded
+            let decodedBody:string = Buffer.from(body, 'base64').toString('ascii') // decode from base64 to string json
             let jsonBody = JSON.parse(decodedBody); // convert from string formatted json to a json object that can be referenced.
             return {
                 statusCode: 200,

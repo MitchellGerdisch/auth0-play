@@ -33,6 +33,7 @@
 
 
 import * as awsx from "@pulumi/awsx";
+import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
 import * as jwt from "jsonwebtoken";
@@ -94,14 +95,7 @@ const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
     },
     ......
     */
-const api = new awsx.apigateway.API("auth0-exercise-api", {
-    routes: [
-        {
-        path: "/customers",
-        method: "POST",
-        eventHandler: async (event) => {
-            console.log("request: " + JSON.stringify(event));
-           /* 
+             /* 
 
 
 
@@ -125,21 +119,41 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
                     console.log("DB PUT SUCCESS", "TABLE: "+dbTableName, "KEY: "+cleanKey, "TIME: "+eventTime);
                 };
             });
+*/
 
-
-
-
-
-
-
-            */
+const api = new awsx.apigateway.API("auth0-exercise-api", {
+    routes: [
+    {
+        path: "/customers/{customerId+}",
+        method: "GET",
+        eventHandler: async (event) => {
             return {
                 statusCode: 200,
-                body: "check lambda logs for POST event"
+                body: "request: "+JSON.stringify(event)
             };
         },
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
-            authorizerName: "jwt-rsa-custom-authorizer",
+            authorizerName: "jwt-rsa-custom-authorizer-get",
+            header: "Authorization",
+            handler: authorizerLambda,
+            identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
+            authorizerResultTtlInSeconds: 3600,
+        }),
+    },
+    {
+        path: "/customers",
+        method: "POST",
+        eventHandler: async (event) => {
+            let body = event.body || ""; // Body is base64 envoded
+            let decodedBody = new Buffer.from(body, 'base64').toString('ascii'); // decode from base64 to string json
+            let jsonBody = JSON.parse(decodedBody); // convert from string formatted json to a json object that can be referenced.
+            return {
+                statusCode: 200,
+                body: JSON.stringify(jsonBody)
+            };
+        },
+        authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
+            authorizerName: "jwt-rsa-custom-authorizer-post",
             header: "Authorization",
             handler: authorizerLambda,
             identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
@@ -149,12 +163,8 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
 });
 
 
-
-
-
- 
-
 // Export the URL for our API
+export const apiUrl = api.stage.invokeUrl;
 export const url = api.url;
 
 /**

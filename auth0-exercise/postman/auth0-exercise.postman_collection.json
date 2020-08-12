@@ -1,0 +1,117 @@
+{
+	"info": {
+		"_postman_id": "4e65a0d9-be56-416a-a8bb-b16b7278e364",
+		"name": "auth0-exercise",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "get  customers",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{ACCESS_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"url": {
+					"raw": "{{API_GATEWAY_URL}}/customers/12345",
+					"host": [
+						"{{API_GATEWAY_URL}}"
+					],
+					"path": [
+						"customers",
+						"12345"
+					]
+				},
+				"description": "{{API_GATEWAY_URL}} - the staged URL for the API API_GATEWAY_URL"
+			},
+			"response": []
+		},
+		{
+			"name": "post customer",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{ACCESS_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customerId\": \"5551212\"\n}"
+				},
+				"url": {
+					"raw": "{{API_GATEWAY_URL}}/customers",
+					"host": [
+						"{{API_GATEWAY_URL}}"
+					],
+					"path": [
+						"customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "auth0 authentication",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "12757050-fa86-4372-9d55-6f3f8e82310f",
+						"exec": [
+							"resp_json = pm.response.json();",
+							"pm.environment.set(\"ACCESS_TOKEN\", resp_json.access_token)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"client_id\": \"{{CLIENT_ID}}\",\n\t\"client_secret\": \"{{CLIENT_SECRET}}\",\n\t\"audience\": \"{{AUDIENCE}}\",\n\t\"grant_type\": \"client_credentials\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTH0_AUTHENTICATOR}}",
+					"host": [
+						"{{AUTH0_AUTHENTICATOR}}"
+					]
+				},
+				"description": "{{AUTH0_AUTHENTICATION}} contains the Auth0 Authenticator URL.\nE.g. https://xxxx.auth0.com/oauth/token\nBODY VARIABLES:\n{{CLIENT_ID}} - from Auth0 Application definition\n{{CLIENT_SECRET}} - from Auth0 Application definition\n{{AUDIENCE}} - from Auth0"
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -117,9 +117,9 @@ async function removeCustomer(dbName: string, email: string) {
     // get the DB entry
     const tableItem = await dbClient.delete(dbParams, function(err, data) {
         if (err) {
-            console.log("DB GET ERROR",err);
+            console.log("DB REMOVE ERROR",err);
         } else {
-            console.log("DB GET SUCCESS", data);
+            console.log("DB REMOVE SUCCESS", data);
         };
     }).promise();
     return tableItem;

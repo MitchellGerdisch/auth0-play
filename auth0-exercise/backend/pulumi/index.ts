@@ -13,6 +13,7 @@
  *    e.g. pulumi config set --secret issuer https://goo.auth0.com
  * 
  * TESTING with POSTMAN
+ * Postman export file can be found under the main folder.
  * Authentication:
  * POST to the auth0 authenticator.
  * Look at API's Test tab for values to use and create an POST with this body:
@@ -78,89 +79,81 @@ const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
     }
 };
 
-// Create our API and reference the Lambda authorizer
-/*
-{
-    "resource": "/customers",
-    "path": "/customers",
-    "httpMethod": "GET",
-    "headers": null,
-    "multiValueHeaders": null,
-    "queryStringParameters": {
-        "customerId": "12345"
-    },
-    "multiValueQueryStringParameters": {
-        "customerId": [
-            "12345"
-        ]
-    },
-    ......
-    */
-             /* 
-
-
-
-
-            const dbClient = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'})
-            // DynamoDB entry
-            let dbParams = {
-                Item: {
-                    ObjectKey: cleanKey,
-                    TimeStamp: eventTime,
-                },
-                TableName: dbTableName,
-            }
-            console.log("Push dbParams",dbParams)
-
-            // Push the DB entry
-            await dbClient.put(dbParams, function(err, data) {
-                if (err) {
-                    console.log("DB PUT ERROR",err);
-                } else {
-                    console.log("DB PUT SUCCESS", "TABLE: "+dbTableName, "KEY: "+cleanKey, "TIME: "+eventTime);
-                };
-            });
-*/
-
-
-// Gets specific customer from DB 
- async function getCustomer(dbName: string, keyValue: string) {
+// Gets specific customer data from DB 
+ async function getCustomer(dbName: string, email: string) {
     const dbClient = new AWS.DynamoDB.DocumentClient();
     // DynamoDB entry
     let dbParams = {
         Key: {
-            email: keyValue, 
+            email: email, 
         },
         TableName: dbName,
     }
     console.log("GET dbParams",dbParams)
 
     // get the DB entry
-    let response = {};
-   const tableItem = await dbClient.get(dbParams, function(err, data) {
+    const tableItem = await dbClient.get(dbParams, function(err, data) {
         if (err) {
             console.log("DB GET ERROR",err);
         } else {
             console.log("DB GET SUCCESS", data);
-            response = data;
         };
     }).promise();
-    console.log("info", JSON.stringify(tableItem));
-    return response;
+    return tableItem.Item;
 }
 
+// Removes specific customer data from DB 
+async function removeCustomer(dbName: string, email: string) {
+    const dbClient = new AWS.DynamoDB.DocumentClient();
+    // DynamoDB entry
+    let dbParams = {
+        Key: {
+            email: email, 
+        },
+        TableName: dbName,
+    }
+    console.log("REMOVE dbParams",dbParams)
 
+    // get the DB entry
+    const tableItem = await dbClient.delete(dbParams, function(err, data) {
+        if (err) {
+            console.log("DB GET ERROR",err);
+        } else {
+            console.log("DB GET SUCCESS", data);
+        };
+    }).promise();
+    return tableItem;
+}
+
+// Adds specific customer data to DB 
+async function addCustomer(dbName: string, customerData: {email: string}) {
+    const dbClient = new AWS.DynamoDB.DocumentClient();
+    // DynamoDB entry
+    let dbParams = {
+        Item: customerData,
+        TableName: dbName,
+    }
+    console.log("PUSH dbParams",dbParams)
+
+    // push the DB entry
+    const tableItem = await dbClient.put(dbParams, function(err, data) {
+        if (err) {
+            console.log("DB PUSH ERROR",err);
+        } else {
+            console.log("DB PUSH SUCCESS", data);
+        };
+    }).promise();
+    return getCustomer(dbName, customerData.email);
+}
 
 const api = new awsx.apigateway.API("auth0-exercise-api", {
     routes: [
     {
-        path: "/customers/{customerId+}",
+        path: "/customer/{customerId+}",
         method: "GET",
         eventHandler: async (event) => {
             let params = event.pathParameters || {}; // params
             let email = params.customerId || "";
-            console.log("event", JSON.stringify(event));
-            console.log("params", JSON.stringify(params));
             let result = await getCustomer(dbTableName, email);
             return {
                 statusCode: 200,
@@ -176,16 +169,37 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
         }),
     },
     {
-        path: "/customers",
+        path: "/customer/{customerId+}",
+        method: "DELETE",
+        eventHandler: async (event) => {
+            let params = event.pathParameters || {}; // params
+            let email = params.customerId || "";
+            let result = await removeCustomer(dbTableName, email);
+            return {
+                statusCode: 200,
+                body: JSON.stringify(result)
+            };
+        },
+        authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
+            authorizerName: "jwt-rsa-custom-authorizer-delete",
+            header: "Authorization",
+            handler: authorizerLambda,
+            identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
+            authorizerResultTtlInSeconds: 3600,
+        }),
+    },
+    {
+        path: "/customer",
         method: "POST",
         eventHandler: async (event) => {
             let body = event.body || ""; // Body is base64 encoded
             let decodedBody:string = Buffer.from(body, 'base64').toString('ascii') // decode from base64 to string json
             let jsonBody = JSON.parse(decodedBody); // convert from string formatted json to a json object that can be referenced.
+            let result = await addCustomer(dbTableName, jsonBody);
             return {
                 statusCode: 200,
-                body: JSON.stringify(jsonBody)
-            };
+                body: JSON.stringify(result)
+            }
         },
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
             authorizerName: "jwt-rsa-custom-authorizer-post",
@@ -200,7 +214,6 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
 
 // Export the URL for our API
 export const apiUrl = api.stage.invokeUrl;
-export const url = api.url;
 
 /**
  * Below is all code that gets added to the Authorizer Lambda. The code was copied and

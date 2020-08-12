@@ -6,7 +6,7 @@
 	},
 	"item": [
 		{
-			"name": "get  customers",
+			"name": "get  customer",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
 			},
@@ -28,13 +28,46 @@
 					"urlencoded": []
 				},
 				"url": {
-					"raw": "{{API_GATEWAY_URL}}/customers/12345",
+					"raw": "{{API_GATEWAY_URL}}/customer/mitch@goo.com",
 					"host": [
 						"{{API_GATEWAY_URL}}"
 					],
 					"path": [
-						"customers",
-						"12345"
+						"customer",
+						"mitch@goo.com"
+					]
+				},
+				"description": "{{API_GATEWAY_URL}} - the staged URL for the API API_GATEWAY_URL"
+			},
+			"response": []
+		},
+		{
+			"name": "delete  customer",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{ACCESS_TOKEN}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
+				"url": {
+					"raw": "{{API_GATEWAY_URL}}/customer/mitch@goo.com",
+					"host": [
+						"{{API_GATEWAY_URL}}"
+					],
+					"path": [
+						"customer",
+						"mitch@goo.com"
 					]
 				},
 				"description": "{{API_GATEWAY_URL}} - the staged URL for the API API_GATEWAY_URL"
@@ -58,15 +91,15 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"customerId\": \"5551212\"\n}"
+					"raw": "{\n    \"email\": \"mitch@goo.com\",\n    \"lastName\": \"Smith\",\n    \"firstName\": \"Mitch\",\n    \"phone\": \"6305551212\",\n    \"gender\": \"M\",\n    \"googleConns\": \"6\"\n}"
 				},
 				"url": {
-					"raw": "{{API_GATEWAY_URL}}/customers",
+					"raw": "{{API_GATEWAY_URL}}/customer",
 					"host": [
 						"{{API_GATEWAY_URL}}"
 					],
 					"path": [
-						"customers"
+						"customer"
 					]
 				}
 			},

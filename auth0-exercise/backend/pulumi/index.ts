@@ -37,7 +37,7 @@ import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
 
 import * as jwt from "jsonwebtoken";
-import * as jwksClient from "jwks-rsa";
+import * as jwksClient from "@types/jwks-rsa";
 import * as util from "util";
 
 const config = new pulumi.Config();

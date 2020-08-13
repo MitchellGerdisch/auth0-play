@@ -1,5 +1,6 @@
 # Set Up 
 - npm install @auth0/auth0-react
+- npm install react-bootstrap bootstrap
 - npm install
 - HTTPS=true npm start
 - Confirm Auth0 Application Settings point to https://IPADDRESS:3000 (as per the output of npm start)

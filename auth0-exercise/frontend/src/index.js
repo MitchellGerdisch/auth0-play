@@ -1,34 +1,25 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import App from "./App";
-import * as serviceWorker from "./serviceWorker";
-import { Auth0Provider } from "@auth0/auth0-react";
-import config from "./auth_config.json";
-import history from "./utils/history";
+import MyForm from "./MyForm";
+import NavBar from "./NavBar";
+//import * as serviceWorker from "./serviceWorker";
+import { BrowserRouter } from "react-router-dom";
+import Auth0ProviderWithHistory from "./auth0-provider-with-history";
+//import { Nav } from "reactstrap";
 
-const onRedirectCallback = (appState) => {
-  history.push(
-    appState && appState.returnTo
-      ? appState.returnTo
-      : window.location.pathname
-  );
-};
 
 ReactDOM.render(
-  <Auth0Provider
-    domain={config.domain}
-    clientId={config.clientId}
-    audience={config.audience}
-    redirectUri={window.location.origin}
-    onRedirectCallback={onRedirectCallback}
-  >
-    <App />
-  </Auth0Provider>,
+  <BrowserRouter>,
+      <Auth0ProviderWithHistory>
+        <NavBar />
+        <MyForm />
+    </Auth0ProviderWithHistory>
+ </BrowserRouter>,
   document.getElementById("root")
 );
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+//serviceWorker.unregister();

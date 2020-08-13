@@ -149,11 +149,11 @@ async function addCustomer(dbName: string, customerData: {email: string}) {
 const api = new awsx.apigateway.API("auth0-exercise-api", {
     routes: [
     {
-        path: "/customer/{customerId+}",
+        path: "/customer",// ?email=CUSTOMER_EMAIL
         method: "GET",
         eventHandler: async (event) => {
-            let params = event.pathParameters || {}; // params
-            let email = params.customerId || "";
+            let params = event.queryStringParameters || {}; // params
+            let email = params.email || "";
             let result = await getCustomer(dbTableName, email);
             return {
                 statusCode: 200,
@@ -161,7 +161,7 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             };
         },
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
-            authorizerName: "jwt-rsa-custom-authorizer-get",
+            authorizerName: "jwt-rsa-custom-authorizer-get-query",
             header: "Authorization",
             handler: authorizerLambda,
             identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
@@ -169,11 +169,11 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
         }),
     },
     {
-        path: "/customer/{customerId+}",
+        path: "/customer", // ?email=CUSTOMER_EMAIL
         method: "DELETE",
         eventHandler: async (event) => {
-            let params = event.pathParameters || {}; // params
-            let email = params.customerId || "";
+            let params = event.queryStringParameters || {}; // params
+            let email = params.email || "";
             let result = await removeCustomer(dbTableName, email);
             return {
                 statusCode: 200,
@@ -189,7 +189,7 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
         }),
     },
     {
-        path: "/customer",
+        path: "/customer",  // { email: CUSTOMER_EMAIL, lastName: LASTNAME, firstName: FIRSTNAME, phone: PHONE, gender: M|F, googleConns: GOOGLECONNS}
         method: "POST",
         eventHandler: async (event) => {
             let body = event.body || ""; // Body is base64 encoded

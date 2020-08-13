@@ -28,13 +28,18 @@
 					"urlencoded": []
 				},
 				"url": {
-					"raw": "{{API_GATEWAY_URL}}/customer/mitch@goo.com",
+					"raw": "{{API_GATEWAY_URL}}/customer?email=mitch@boo.com",
 					"host": [
 						"{{API_GATEWAY_URL}}"
 					],
 					"path": [
-						"customer",
-						"mitch@goo.com"
+						"customer"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "mitch@boo.com"
+						}
 					]
 				},
 				"description": "{{API_GATEWAY_URL}} - the staged URL for the API API_GATEWAY_URL"
@@ -61,13 +66,18 @@
 					"urlencoded": []
 				},
 				"url": {
-					"raw": "{{API_GATEWAY_URL}}/customer/mitch@goo.com",
+					"raw": "{{API_GATEWAY_URL}}/customer?email=mitch@boo.com",
 					"host": [
 						"{{API_GATEWAY_URL}}"
 					],
 					"path": [
-						"customer",
-						"mitch@goo.com"
+						"customer"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "mitch@boo.com"
+						}
 					]
 				},
 				"description": "{{API_GATEWAY_URL}} - the staged URL for the API API_GATEWAY_URL"
@@ -91,7 +101,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\": \"mitch@goo.com\",\n    \"lastName\": \"Smith\",\n    \"firstName\": \"Mitch\",\n    \"phone\": \"6305551212\",\n    \"gender\": \"M\",\n    \"googleConns\": \"6\"\n}"
+					"raw": "{\n    \"email\": \"mitch@boo.com\",\n    \"lastName\": \"Johnson\",\n    \"firstName\": \"Mitch\",\n    \"phone\": \"6305551212\",\n    \"gender\": \"M\",\n    \"googleConns\": \"6\"\n}"
 				},
 				"url": {
 					"raw": "{{API_GATEWAY_URL}}/customer",

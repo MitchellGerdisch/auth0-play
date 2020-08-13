@@ -11,10 +11,10 @@ For each customer the following information is stored:
 * googleConns: (string) Customer Google Connections Count
 
 # API Specification
-* GET /customer/{CustomerEmail}
+* GET /customer?email={CustomerEmail}
   * Returns data for given customer
 * POST /customer
   * Stores the data for the given customer given in the body.
   * See Data section above for fields and values.
-* DELETE /customer/{CustomerEmail}
+* DELETE /customer?email={CustomerEmail}
   * Removes given customer

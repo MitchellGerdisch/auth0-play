@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import MyForm from "./MyForm";
+import OrderForm from "./OrderForm";
 import NavBar from "./NavBar";
 //import * as serviceWorker from "./serviceWorker";
 import { BrowserRouter } from "react-router-dom";
@@ -13,7 +13,7 @@ ReactDOM.render(
   <BrowserRouter>,
       <Auth0ProviderWithHistory>
         <NavBar />
-        <MyForm />
+        <OrderForm />
     </Auth0ProviderWithHistory>
  </BrowserRouter>,
   document.getElementById("root")

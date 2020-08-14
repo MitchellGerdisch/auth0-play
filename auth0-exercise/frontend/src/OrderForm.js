@@ -91,7 +91,7 @@ export function OrderForm(props) {
         const user_fetch = await fetch(uri, {
           method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
+                //'Content-Type': 'text/plain',
                 'Authorization': 'Bearer '+ accessToken,
                 'Access-Control-Allow-Origin': '*',
               }

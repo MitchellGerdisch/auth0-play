@@ -25,7 +25,7 @@ export function OrderForm(props) {
             client_id: process.env.REACT_APP_AUTH0_CLIENT_ID
           })
           try {
-            const token = await auth0.getTokenWithPopup(); // getTokenSilently();
+            const token = await auth0.getTokenSilently({audience: process.env.REACT_APP_AUTH0_AUDIENCE});
             console.log("awaited token", token)
             setToken(token)
           } catch (err) {
@@ -42,7 +42,7 @@ export function OrderForm(props) {
       if (user.email_verified === false) {
         alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
       } else {
-        setSubmitted(true)
+        setSubmitted((submitted ? false : true))
         console.log("access token", accessToken)
         alert(`${salutation} ${lastName}, your order has been placed..`)
       }

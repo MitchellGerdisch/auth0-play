@@ -5,6 +5,7 @@
 - HTTPS=true npm start
 - Confirm Auth0 Application Settings point to https://IPADDRESS:3000 (as per the output of npm start)
 
+
 # Public Launch:
 - Use AWS Amplify to point at repo.
 - Select the monorepo option and point down to frontend folder.

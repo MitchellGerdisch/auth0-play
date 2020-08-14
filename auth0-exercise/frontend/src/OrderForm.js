@@ -28,6 +28,7 @@ export function OrderForm(props) {
   const audience = process.env.REACT_APP_AUTH0_AUDIENCE
   const backendUrl = process.env.REACT_APP_BACKEND_URL
   const serviceUrl = process.env.REACT_APP_SERVICE_URL
+  console.log("serviceUrl retrieved", serviceUrl)
 
   // Get auth0 data
   const {
@@ -42,6 +43,7 @@ export function OrderForm(props) {
   // useEffect() provides a mechanism to make these async calls.
   useEffect(() => {
     async function getToken() {
+      console.log("getToken")
       // Only want to try and get a token if user is authenticated
       if (isAuthenticated) {
         const auth0 = await createAuth0Client({
@@ -57,13 +59,17 @@ export function OrderForm(props) {
           console.log("token error", err)
         }
       }
+      console.log("getToken done")
     }
     getToken()
+    console.log("getToken useEffect done")
   }, [submitted, isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
 
   // Prepopulate the form with any data available from the backend DB
   useEffect(() => {
     async function setFormFields() {
+      console.log("setFormFields")
+
       setFirstName("First Name")
       setLastName("Last Name")
       setPhone("Phone Number")
@@ -101,13 +107,16 @@ export function OrderForm(props) {
           setSalutation(user_data.salutation)
         } 
       }
+      console.log("setFormFields done")
     }
     setFormFields()
+    console.log("setFormFields useEffect done")
   }, [isAuthenticated, user, domain, clientId, audience, accessToken, backendUrl]); // the submitted value is used as a flag to get a token.
 
 
   // Processes the form when the user hits submit.
   const handleSubmit = (evt) => {
+      console.log("handleSubmit")
       evt.preventDefault();
       if (user.email_verified === false) {
         alert(user.email+' needs to be verified before placing order. Check your email for verification link.')

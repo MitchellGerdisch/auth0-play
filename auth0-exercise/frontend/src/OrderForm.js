@@ -86,6 +86,7 @@ export function OrderForm(props) {
           console.log("token error", err)
         }
 
+
         // Get the current data for the user from the backend DB
         const uri = backendUrl+"/customer?email="+user.email
         const user_fetch = await fetch(uri, {

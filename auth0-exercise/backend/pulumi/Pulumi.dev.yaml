@@ -5,4 +5,6 @@ config:
     secure: AAABADctx+fgYdsyWmb2FvAzzNfD9cTeWZF1JMun1dlIVyBaTnP6deA0SGdOnpOWyqXdldm9pyEWKSyCpA==
   auth0:jwksUri:
     secure: AAABAGS6ZTBIVn7RTqL0BA90wrtxQKAAmf0jCTtr2wISGY+IDtJnNBbxU2v6bfEOe3IQ+t9HuXTnMF4152U5tKP9x3zTiJbGrKW+pDMRSOo3nA==
+  auth0:origin:
+    secure: AAABAFGNPxu23fX3Wz8i+IuUAUjLzHfNiWvh0AU34tl9KPLQ338F4uyLXho4kskbNc1Z0g4pjb5AmCJoIW/sZAcUP2JeBEVtnaY0a08H/99u0w/2bg==
   aws:region: us-east-1

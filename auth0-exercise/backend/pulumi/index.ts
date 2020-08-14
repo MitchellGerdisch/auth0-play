@@ -47,6 +47,7 @@ const config = new pulumi.Config();
 const jwksUri = config.require("jwksUri");
 const audience = config.require("audience");
 const issuer = config.require("issuer");
+const origin = config.require("origin");
 
 // Create DynamoDB table to store the customer information
 const dbTableName = "pizza42-customers" 
@@ -157,8 +158,10 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             return {
                 statusCode: 200,
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Credentials': true,
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Allow-Methods': '*',
+                    'Access-Control-Allow-Credentials': '*',
                 },
                 body: JSON.stringify(result)
             };
@@ -184,8 +187,10 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             return {
                 statusCode: 200,
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Credentials': true,
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Allow-Methods': '*',
+                    'Access-Control-Allow-Credentials': '*',
                 },
                 body: JSON.stringify(result)
             };
@@ -207,8 +212,10 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             let result = await removeCustomer(dbTableName, email);
             return {
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Credentials': true,
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Allow-Methods': '*',
+                    'Access-Control-Allow-Credentials': '*',
                 },
                 statusCode: 200,
                 body: JSON.stringify(result)
@@ -232,8 +239,10 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             let result = await addCustomer(dbTableName, jsonBody);
             return {
                 headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Credentials': true,
+                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Allow-Methods': '*',
+                    'Access-Control-Allow-Credentials': '*'
                 },
                 statusCode: 200,
                 body: JSON.stringify(result)

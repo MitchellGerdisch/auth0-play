@@ -5,6 +5,7 @@ import { Auth0Provider } from "@auth0/auth0-react";
 
 const Auth0ProviderWithHistory = ({ children }) => {
   const domain = process.env.AUTH0_DOMAIN;
+  console.log("DOMAIN", domain)
   const clientId = process.env.AUTH0_CLIENT_ID;
   const audience = process.env.AUTH0_AUDIENCE;
 

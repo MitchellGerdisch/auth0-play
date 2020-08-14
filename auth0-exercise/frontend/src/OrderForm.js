@@ -21,12 +21,12 @@ export function OrderForm(props) {
       async function fetchData() {
         if (isAuthenticated) {
           const auth0 = await createAuth0Client({
-            domain: process.env.REACT_APP_AUTH0_DOMAIN,
-            client_id: process.env.REACT_APP_AUTH0_CLIENT_ID
+            domain: process.env.AUTH0_DOMAIN,
+            client_id: process.env.AUTH0_CLIENT_ID
           })
           try {
             // VERY IMPORTANT: You must pass the audience to getTokenSilently to get a proper token.
-            const token = await auth0.getTokenSilently({audience: process.env.REACT_APP_AUTH0_AUDIENCE});
+            const token = await auth0.getTokenSilently({audience: process.env.AUTH0_AUDIENCE});
             console.log("awaited token", token)
             setToken(token)
           } catch (err) {

@@ -27,16 +27,13 @@ export function OrderForm(props) {
   const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID
   const audience = process.env.REACT_APP_AUTH0_AUDIENCE
   const backendUrl = process.env.REACT_APP_BACKEND_URL
-  const serviceUrl = process.env.REACT_APP_SERVICE_URL
-  console.log("serviceUrl retrieved", serviceUrl)
+  //const serviceUrl = process.env.REACT_APP_SERVICE_URL
 
   // Get auth0 data
   const {
     user,
     isAuthenticated,
   } = useAuth0()
-
-  console.log("USER",JSON.stringify(user));
 
   // To interact with the APIs, we need to use async calls.
   // But render() doesn't allow async calls.
@@ -96,7 +93,7 @@ export function OrderForm(props) {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer '+ accessToken,
-                'Access-Control-Allow-Origin': serviceUrl,
+                'Access-Control-Allow-Origin': '*',
               }
         })
         const user_data = await user_fetch.json()	

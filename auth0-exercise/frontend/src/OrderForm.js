@@ -60,7 +60,7 @@ export function OrderForm(props) {
     }
     getToken()
     console.log("getToken useEffect done")
-  }, [submitted, isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
+  }); //, [submitted]); //., isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
 
   // Prepopulate the form with any data available from the backend DB
   useEffect(() => {
@@ -107,7 +107,7 @@ export function OrderForm(props) {
     }
     setFormFields()
     console.log("setFormFields useEffect done")
-  }, [isAuthenticated, user, domain, clientId, audience, accessToken, backendUrl]); // the submitted value is used as a flag to get a token.
+  }); //, [isAuthenticated, user, domain, clientId, audience, accessToken, backendUrl]); // the submitted value is used as a flag to get a token.
 
 
   // Processes the form when the user hits submit.

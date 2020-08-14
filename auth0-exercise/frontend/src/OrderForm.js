@@ -110,7 +110,6 @@ export function OrderForm(props) {
     console.log("setFormFields useEffect done")
   }, [isAuthenticated, user, domain, clientId, audience, accessToken, backendUrl]); // the submitted value is used as a flag to get a token.
 
-
   // Processes the form when the user hits submit.
   const handleSubmit = (evt) => {
       console.log("handleSubmit")

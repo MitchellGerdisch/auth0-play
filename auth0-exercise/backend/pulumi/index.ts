@@ -151,6 +151,28 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
     routes: [
     {
         path: "/customer",// ?email=CUSTOMER_EMAIL
+        method: "OPTIONS",
+        eventHandler: async (event) => {
+            let result = {}
+            return {
+                statusCode: 200,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Credentials': true,
+                },
+                body: JSON.stringify(result)
+            };
+        },
+        authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
+            authorizerName: "jwt-rsa-custom-authorizer-options",
+            header: "Authorization",
+            handler: authorizerLambda,
+            identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
+            authorizerResultTtlInSeconds: 3600,
+        }),
+    },
+    {
+        path: "/customer",// ?email=CUSTOMER_EMAIL
         method: "GET",
         eventHandler: async (event) => {
             let params = event.queryStringParameters || {}; // params

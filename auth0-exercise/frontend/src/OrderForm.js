@@ -26,6 +26,7 @@ export function OrderForm(props) {
           })
           try {
             const token = await auth0.getTokenSilently();
+            console.log("awaited token", token)
             setToken(token)
           } catch (err) {
             console.log("token error", err)

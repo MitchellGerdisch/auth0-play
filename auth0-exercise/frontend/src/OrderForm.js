@@ -27,6 +27,7 @@ export function OrderForm(props) {
   const clientId = process.env.REACT_APP_AUTH0_CLIENT_ID
   const audience = process.env.REACT_APP_AUTH0_AUDIENCE
   const backendUrl = process.env.REACT_APP_BACKEND_URL
+  const serviceUrl = process.env.REACT_APP_SERVICE_URL
 
   // Get auth0 data
   const {
@@ -88,7 +89,8 @@ export function OrderForm(props) {
           method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer '+ accessToken
+                'Authorization': 'Bearer '+ accessToken,
+                'Access-Control-Allow-Origin': serviceUrl,
               }
         })
         const user_data = await user_fetch.json()	

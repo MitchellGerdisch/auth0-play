@@ -89,13 +89,15 @@ export function OrderForm(props) {
         // Get the current data for the user from the backend DB
         const uri = backendUrl+"/customer?email="+user.email
         const user_fetch = await fetch(uri, {
+          credentials: 'include',
           method: 'GET',
             headers: {
-                'Content-Type': 'text/plain',
+                //'Content-Type': 'text/plain',
                 'Authorization': 'Bearer '+ accessToken,
               }
         })
         const user_data = await user_fetch.json()	
+        console.log("USER_DATA", JSON.stringify(user_data))
         if (user_data) {
           setFirstName(user_data.firstName)
           setLastName(user_data.lastName)

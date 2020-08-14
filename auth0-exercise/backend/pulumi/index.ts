@@ -212,6 +212,20 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             authorizerResultTtlInSeconds: 3600,
         }),
     }],
+    gatewayResponses: {
+        DEFAULT_4XX: {
+          statusCode: 400,
+          responseTemplates: {
+            'application/json': '{"message":$context.error.messageString}',
+          },
+          responseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Methods': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Credentials': "'*'",
+          },
+        },
+    }
 });
 
 

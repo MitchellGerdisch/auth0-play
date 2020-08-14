@@ -93,7 +93,7 @@ export function OrderForm(props) {
           method: 'GET',
             headers: {
                 'Content-Type': 'text/plain',
-                'Authorization': 'Bearer '+ accessToken,
+                'Authorization': 'Bearer '+ accessToken
               }
         })
         const user_data = await user_fetch.json()	

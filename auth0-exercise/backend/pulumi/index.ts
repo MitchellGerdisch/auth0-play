@@ -41,7 +41,7 @@ import * as AWS from "aws-sdk";
 import * as jwt from "jsonwebtoken";
 import * as jwksClient from "jwks-rsa";
 import * as util from "util";
-import * as authenticate from "authLib";
+//import * as authenticate from "authLib";
 
 const config = new pulumi.Config();
 const jwksUri = config.require("jwksUri");
@@ -68,7 +68,6 @@ const fileTable = new aws.dynamodb.Table(dbTableName, {
     name: dbTableName, // assures the table name is known. to-do: figure out how to use generated table name in the magic function.
 });
 
-/*
 // Build API gateway and related Lambda custom authorizer and event handler
 const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
     try {
@@ -80,7 +79,6 @@ const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
         throw new Error("Unauthorized "+JSON.stringify(err));
     }
 };
-*/
 
 // Gets specific customer data from DB 
  async function getCustomer(dbName: string, email: string) {
@@ -163,10 +161,13 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             }
             return {
                 statusCode: 200,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Credentials': true,
+                },
                 body: JSON.stringify(result)
             };
         },
-        /*
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
             authorizerName: "jwt-rsa-custom-authorizer-get-query",
             header: "Authorization",
@@ -174,7 +175,6 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
             authorizerResultTtlInSeconds: 3600,
         }),
-        */
     },
     {
         path: "/customer", // ?email=CUSTOMER_EMAIL
@@ -184,11 +184,14 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             let email = params.email || "";
             let result = await removeCustomer(dbTableName, email);
             return {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Credentials': true,
+                },
                 statusCode: 200,
                 body: JSON.stringify(result)
             };
         },
-        /*
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
             authorizerName: "jwt-rsa-custom-authorizer-delete",
             header: "Authorization",
@@ -196,7 +199,6 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
             authorizerResultTtlInSeconds: 3600,
         }),
-        */
     },
     {
         path: "/customer",  // { email: CUSTOMER_EMAIL, lastName: LASTNAME, firstName: FIRSTNAME, phone: PHONE, gender: M|F, googleConns: GOOGLECONNS}
@@ -207,11 +209,14 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             let jsonBody = JSON.parse(decodedBody); // convert from string formatted json to a json object that can be referenced.
             let result = await addCustomer(dbTableName, jsonBody);
             return {
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Credentials': true,
+                },
                 statusCode: 200,
                 body: JSON.stringify(result)
             }
         },
-        /*
         authorizers: awsx.apigateway.getTokenLambdaAuthorizer({
             authorizerName: "jwt-rsa-custom-authorizer-post",
             header: "Authorization",
@@ -219,8 +224,57 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             identityValidationExpression: "^Bearer [-0-9a-zA-Z\._]*$",
             authorizerResultTtlInSeconds: 3600,
         }),
-        */
     }],
+    gatewayResponses: {
+        DEFAULT_4XX: {
+          statusCode: 400,
+          responseTemplates: {
+            'application/json': '{"message":$context.error.messageString}',
+          },
+          responseParameters: {
+            'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Methods': "'*'",
+            'gatewayresponse.header.Access-Control-Allow-Credentials': "'*'",
+          },
+        },
+        DEFAULT_5XX: {
+            statusCode: 500,
+            responseTemplates: {
+              'application/json': '{"message":$context.error.messageString}',
+            },
+            responseParameters: {
+              'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Methods': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Credentials': "'*'",
+            },
+        },
+        UNAUTHORIZED: {
+            statusCode: 409,
+            responseTemplates: {
+              'application/json': '{"message":$context.error.messageString}',
+            },
+            responseParameters: {
+              'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Methods': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Credentials': "'*'",
+            },
+        },
+        AUTHORIZER_FAILURE: {
+            statusCode: 408,
+            responseTemplates: {
+              'application/json': '{"message":$context.error.messageString}',
+            },
+            responseParameters: {
+              'gatewayresponse.header.Access-Control-Allow-Origin': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Headers': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Methods': "'*'",
+              'gatewayresponse.header.Access-Control-Allow-Credentials': "'*'",
+            },
+        }
+    }
 });
 
 

@@ -62,7 +62,6 @@ export function OrderForm(props) {
     console.log("getToken useEffect done");
   }, [submitted, isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
 
-
   // Prepopulate the form with any data available from the backend DB 
   useEffect(() => {
     async function setFormFields() {

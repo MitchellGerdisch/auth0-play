@@ -4,6 +4,7 @@
 - npm install
 - HTTPS=true npm start
 - Confirm Auth0 Application Settings point to https://IPADDRESS:3000 (as per the output of npm start)
+  - AVOID using localhost:3000 since that will affect the SPA's ability to get silent consent.
 
 
 # Public Launch:

@@ -1,6 +1,6 @@
 config:
   auth0:audience:
-    secure: AAABAGwvDNp6tffHrnReN1R+oFibrndbochmsqlVf1kuo87XyEK1d4q+n3I2wp7+zJMDokhH2Juh
+    secure: AAABACn0Z4tktWjCK5/Bp2q3fHNHj/lWrzrTnzdaZg3/3728+diI3DlJV5cCtRKwfbbfCZaEB5Wzjk6z1lQ=
   auth0:issuer:
     secure: AAABADctx+fgYdsyWmb2FvAzzNfD9cTeWZF1JMun1dlIVyBaTnP6deA0SGdOnpOWyqXdldm9pyEWKSyCpA==
   auth0:jwksUri:

@@ -25,7 +25,7 @@ export function OrderForm(props) {
             client_id: process.env.REACT_APP_AUTH0_CLIENT_ID
           })
           try {
-            const token = await auth0.getTokenSilently();
+            const token = await auth0.getTokenWithPopup(); // getTokenSilently();
             console.log("awaited token", token)
             setToken(token)
           } catch (err) {

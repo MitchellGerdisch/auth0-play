@@ -87,7 +87,7 @@ export function OrderForm(props) {
         }
 
         // Get the current data for the user from the backend DB
-        const uri = backendUrl+"/customer/"+user.email
+        const uri = backendUrl+"/customer?email="+user.email
         const user_fetch = await fetch(uri, {
           method: 'GET',
             headers: {

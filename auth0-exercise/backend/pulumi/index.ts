@@ -155,6 +155,9 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             let params = event.queryStringParameters || {}; // params
             let email = params.email || "";
             let result = await getCustomer(dbTableName, email);
+            if (!result) {
+                result = {}
+            }
             return {
                 statusCode: 200,
                 body: JSON.stringify(result)

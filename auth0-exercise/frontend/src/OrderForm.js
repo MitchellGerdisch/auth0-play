@@ -92,6 +92,7 @@ export function OrderForm(props) {
           method: 'GET',
             headers: {
                 //'Content-Type': 'text/plain',
+                "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",
                 'Authorization': 'Bearer '+ accessToken,
                 'Access-Control-Allow-Origin': '*',
               }

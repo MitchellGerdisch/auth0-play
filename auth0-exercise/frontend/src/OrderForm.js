@@ -90,6 +90,7 @@ export function OrderForm(props) {
         const uri = backendUrl+"/customer?email="+user.email
         const user_fetch = await fetch(uri, {
           method: 'GET',
+          mode: "no-cors",
             headers: {
                 //'Content-Type': 'text/plain',
                 "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept",

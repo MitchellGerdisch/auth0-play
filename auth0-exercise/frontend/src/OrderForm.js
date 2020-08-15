@@ -36,10 +36,9 @@ export function OrderForm(props) {
 
   const {user, isAuthenticated} = useAuth0()
 
-  // To interact with the APIs, we need to use async calls.
-  // But render() doesn't allow async calls.
-  // useEffect() provides a mechanism to make these async calls.
   /****** 
+  // Should be run when the page is first set
+  // useEffect() provides a mechanism to make async calls in render.
   useEffect(() => {
     async function getToken() {
       console.log("getToken")
@@ -62,8 +61,8 @@ export function OrderForm(props) {
     }
     getToken()
     console.log("getToken useEffect done");
-  }, [submitted, isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
-  *****/
+  }, [isAuthenticated, domain, clientId, audience]); 
+  *******/
 
   // Process the form with any data available from the backend DB 
   // The form is only available if the user was authenticated. 
@@ -166,7 +165,7 @@ export function OrderForm(props) {
         <input
           type="text"
           value={firstName}
-          onChange={e => {
+          onBlur={e => {
             setFirstName(e.target.value)
           }}
         />
@@ -176,7 +175,7 @@ export function OrderForm(props) {
         <input
           type="text"
           value={lastName}
-          onChange={e => {
+          onBlur={e => {
             setLastName(e.target.value)
           }}
         />
@@ -186,7 +185,7 @@ export function OrderForm(props) {
         <input
           type="text"
           value={phone}
-          onChange={e => {
+          onBlur={e => {
             setPhone(e.target.value)
           }}
         />

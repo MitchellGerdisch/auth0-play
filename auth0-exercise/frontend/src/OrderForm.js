@@ -10,6 +10,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import createAuth0Client from '@auth0/auth0-spa-js';
 import styles from './OrderForm.css';
+import Loading from './components/Loading'
 import {
   Container, Form
 } from 'reactstrap';
@@ -26,7 +27,8 @@ const OrderForm = () => {
   const [lastName, setLastName] = useState("Last Name");
   const [phone, setPhone] = useState("630-555-1212");
   const [salutation, setSalutation] = useState("none");
-  const [submitted, setSubmitted] = useState(false)
+  const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
 
   //const {user, isAuthenticated} = useAuth0()
@@ -55,6 +57,7 @@ const OrderForm = () => {
             "salutation": salutation,
           }
           console.log("Payload", JSON.stringify(payload))
+          setIsLoading(true);
           // Get a fresh token
         const auth0 = await createAuth0Client({
           domain: domain,
@@ -78,18 +81,26 @@ const OrderForm = () => {
             })
             const user_data = await user_fetch.json()	
             console.log("USER_DATA", JSON.stringify(user_data))
-          // Only process the pizza order if the user has verified their email
-          if (user.email_verified) {
-            alert(`${salutation} ${lastName}, your order has been placed..`)
-          } else {
-            alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
-          }
+            setIsLoading(false);
+
         }
     }
     processSubmit();
   }); 
 
+  if (submitted) {
+            // Only process the pizza order if the user has verified their email
+            if (user.email_verified) {
+              alert(`${salutation} ${lastName}, your order has been placed..`)
+            } else {
+              alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
+            }
+          }
+
   // Build the order form once the user has logged in.
+  if (isLoading) {
+    return <Loading />
+  }
   return (
     isAuthenticated && (
     <Container className={styles.form}>

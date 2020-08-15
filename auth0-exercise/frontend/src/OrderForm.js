@@ -95,6 +95,7 @@ const OrderForm = () => {
           // Push user data to DB backend regardless
           const payload = {
             "email": user.email,
+            "subId": user.sub,
             "lastName": lastName,
             "firstName": firstName,
             "phone": phone,

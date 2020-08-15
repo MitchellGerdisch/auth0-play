@@ -36,17 +36,22 @@
 import * as awsx from "@pulumi/awsx";
 import * as aws from "@pulumi/aws";
 import * as pulumi from "@pulumi/pulumi";
-import * as AWS from "aws-sdk";
-
+import * as AWS from "aws-sdk"
 import * as jwt from "jsonwebtoken";
 import * as jwksClient from "jwks-rsa";
 import * as util from "util";
+const fetch = require("node-fetch");
+
+import { isTestModeEnabled } from "@pulumi/pulumi/runtime";
 //import * as authenticate from "authLib";
 
 const config = new pulumi.Config();
 const jwksUri = config.require("jwksUri");
 const audience = config.require("audience");
 const issuer = config.require("issuer");
+const mgmtClientId = config.require("mgmt_client_id");
+const mgmtClientSecret = config.require("mgmt_client_secret");
+const mgmtAudience = config.require("mgmt_audience");
 
 // Create DynamoDB table to store the customer information
 const dbTableName = "pizza42-customers" 
@@ -125,13 +130,86 @@ async function removeCustomer(dbName: string, email: string) {
     }).promise();
     return tableItem;
 }
+// Interacts with google API to get connections data
+async function getGoogleConns(sub: string)  {
+    console.log("DEBUG getGoogleConns", sub)
+
+    // call management api for access token
+    // get token
+    const token_url = issuer+"oauth/token"
+    const reqheaders = { "Content-Type":"application/json", } 
+    type PayLoad = {
+        client_id: string,
+        client_secret: string,
+        audience: string,
+        grant_type: string
+    }
+    const payload: PayLoad = {
+        client_id: mgmtClientId,
+        client_secret: mgmtClientSecret,
+        audience: mgmtAudience,
+        grant_type: "client_credentials"
+    }
+    const opts: RequestInit = {
+        method: 'POST',
+        headers: reqheaders,
+        body: JSON.stringify(payload)
+    }
+
+    const token_fetch = await fetch(token_url, opts);
+    const token_data = await token_fetch.json()
+    console.log("DEBUG token_data",JSON.stringify(token_data))
+    const mgmt_token = token_data.access_token;
+    console.log("DEBUG mgmt_token",mgmt_token)
+
+    // get user info
+    let user_url = mgmtAudience+"users/"+sub;
+
+    const user_fetch = await fetch(user_url, {
+        method: 'GET',
+        headers: {'Authorization': 'Bearer '+ mgmt_token }
+    })
+    const user_data = await user_fetch.json();
+    console.log("DEBUG detailed user_data",JSON.stringify(user_data))
+
+    let google_access_token = "";
+    let identities = user_data.identities;
+    for (let i = 0; i < identities.length; i++) {
+        let id = identities[i];
+        if (id.provider === "google-oauth2") {
+            google_access_token = id.access_token;
+        }
+    }
+    console.log("DEBUG google_access_token", google_access_token)
+
+    let googleConns = 0;
+    /****
+     * At this point need to call gogole api
+     * https://github.com/google/google-api-javascript-client/blob/master/samples/authSample.html
+     * https://developers.google.com/people/api/rest/
+     */
+    return(googleConns)
+}
 
 // Adds specific customer data to DB 
-async function addCustomer(dbName: string, customerData: {email: string}) {
-    const dbClient = new AWS.DynamoDB.DocumentClient();
+async function addCustomer(dbName: string, customerData: {email: string, sub:string}) {
+
+    // add google connections data to the user data
+    let custSub = customerData.subId
+    const googleConns = await getGoogleConns(custSub)
+    let gcons = {
+        googleConns: googleConns
+    }
+    let dbItem = {
+        ...customerData,
+        ...gcons
+    }
+    console.log("DEBUG dbItem",JSON.stringify(dbItem))
+
     // DynamoDB entry
+    const dbClient = new AWS.DynamoDB.DocumentClient();
     let dbParams = {
-        Item: customerData,
+        Item: dbItem,
         TableName: dbName,
     }
     console.log("PUSH dbParams",dbParams)

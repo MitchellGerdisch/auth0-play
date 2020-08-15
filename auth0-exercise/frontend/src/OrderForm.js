@@ -20,7 +20,7 @@ export function OrderForm(props) {
   //const [order, setOrder] = useState("");
   const [submitted, setSubmitted] = useState(false);
   // Token data for interacting with the backend API
-  const [accessToken, setToken] = useState("");
+  //const [accessToken, setToken] = useState("");
 
   // Get domains, audiences, etc from environment variables
   const domain = process.env.REACT_APP_AUTH0_DOMAIN
@@ -34,15 +34,12 @@ export function OrderForm(props) {
   // build the base API URL with the cors proxy transversal
   const apiUri = corsProxy+backendUrl+"/customer"
 
-  // Get auth0 data
-  const {
-    user,
-    isAuthenticated,
-  } = useAuth0()
+  const {user, isAuthenticated} = useAuth0()
 
   // To interact with the APIs, we need to use async calls.
   // But render() doesn't allow async calls.
   // useEffect() provides a mechanism to make these async calls.
+  /****** 
   useEffect(() => {
     async function getToken() {
       console.log("getToken")
@@ -66,12 +63,13 @@ export function OrderForm(props) {
     getToken()
     console.log("getToken useEffect done");
   }, [submitted, isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
+  *****/
 
-  // Prepopulate the form with any data available from the backend DB 
+  // Process the form with any data available from the backend DB 
+  // The form is only available if the user was authenticated. 
   useEffect(() => {
-    async function setFormFields() {
-      console.log("setFormFields")
-
+    async function processSubmit() {
+      console.log("processSubmit")
       /*
       setFirstName("First Name")
       setLastName("Last Name")
@@ -80,15 +78,15 @@ export function OrderForm(props) {
       */
 
       // Get a fresh token
-      if (isAuthenticated) {
         const auth0 = await createAuth0Client({
           domain: domain,
           client_id: clientId
         })
+        let token = ""
         try {
-          const token = await auth0.getTokenSilently({audience: audience});
+          token = await auth0.getTokenSilently({audience: audience});
           console.log("awaited token", token)
-          setToken(token)
+          //setToken(token)
         } catch (err) {
           console.log("token error", err)
         }
@@ -99,7 +97,7 @@ export function OrderForm(props) {
           method: 'GET',
             headers: {
                 'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
-                'Authorization': 'Bearer '+ accessToken,
+                'Authorization': 'Bearer '+ token
               }
         })
         const user_data = await user_fetch.json()	
@@ -111,25 +109,21 @@ export function OrderForm(props) {
           setSalutation(user_data.salutation)
         } 
       }
-      console.log("setFormFields done")
-    }
-    setFormFields()
-    console.log("setFormFields useEffect done")
-  },[isAuthenticated, user, domain, clientId, audience, accessToken, backendUrl]); // the submitted value is used as a flag to get a token.
+    processSubmit()
+  },[submitted, domain, audience, clientId, apiUri, user]); // the submitted value is used as a flag 
 
   // Processes the form when the user hits submit.
   const handleSubmit = (evt) => {
-      console.log("handleSubmit")
-      evt.preventDefault();
-      if (user.email_verified === false) {
-        alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
-      } else {
-        setSubmitted((submitted ? false : true))
-        console.log("access token", accessToken)
-        alert(`${salutation} ${lastName}, your order has been placed..`)
-      }
+    evt.preventDefault();
+    console.log("handleSubmit")
+    if (user.email_verified === false) {
+      alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
+    } else {
+      setSubmitted((submitted ? false : true)) // toggle submitted to drive async functions
+      const address = (salutation ? salutation : "");
+      alert(`${address} ${lastName}, your order has been placed..`)
+    }
   }
-
 
   // Build the order form once the user has logged in.
   return (

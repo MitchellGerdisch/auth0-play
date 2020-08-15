@@ -117,6 +117,7 @@ export function OrderForm(props) {
             "phone": phone,
             "salutation": salutation,
           }
+          console.log("Body", JSON.stringify(body))
           const uri = apiUri
             const user_fetch = await fetch(uri, {
               method: 'POST',

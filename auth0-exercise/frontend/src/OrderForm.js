@@ -29,12 +29,13 @@ const OrderForm = () => {
   const [salutation, setSalutation] = useState("none");
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [firstTime, setFirstTime] = useState(true);
 
 
   //const {user, isAuthenticated} = useAuth0()
   const {user,isAuthenticated} = useAuth0()
 
-  
+  console.log("AUTH0 USER DATA", JSON.stringify(user))
 
   // Process the form with any data available from the backend DB 
   // The form is only available if the user was authenticated. 
@@ -44,7 +45,50 @@ const OrderForm = () => {
         const corsProxy = "https://cors-anywhere.herokuapp.com/"
         // build the base API URL with the cors proxy transversal
         const apiUri = corsProxy+backendUrl+"/customer"
-      
+
+        // See if we already know this use and fill in the form if we do
+        if (isAuthenticated && firstTime) {
+          setFirstTime(false)
+          setIsLoading(true);
+          // Get a fresh token
+        const auth0 = await createAuth0Client({
+          domain: domain,
+          client_id: clientId
+        })
+        let token = ""
+        try {
+          token = await auth0.getTokenSilently({audience: audience});
+        } catch (err) {
+          console.log("token error", err)
+        }
+        console.log(token)
+          const uri = apiUri+"?email="+user.email;
+          const user_fetch = await fetch(uri, {
+            method: 'GET',
+              headers: {
+                  'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
+                  'Authorization': 'Bearer '+ token
+                }
+          })
+          const user_data = await user_fetch.json()	
+          console.log("BACKEND USER_DATA", JSON.stringify(user_data))
+          if (typeof(user_data.email) !== 'undefined') {
+            // Then we found someone, so fill in what we can
+            if (typeof(user_data.firstName) !== 'undefined') {
+              setFirstName(user_data.firstName)
+            }
+            if (typeof(user_data.lastName) !== 'undefined') {
+              setLastName(user_data.lastName)
+            }
+            if (typeof(user_data.phone) !== 'undefined') {
+              setPhone(user_data.phone)
+            }
+            if (typeof(user_data.salutation) !== 'undefined') {
+              setSalutation(user_data.salutation)
+            }
+          } 
+          setIsLoading(false)
+        }
 
         if (submitted) {
           setSubmitted(false); //reset
@@ -56,7 +100,7 @@ const OrderForm = () => {
             "phone": phone,
             "salutation": salutation,
           }
-          console.log("Payload", JSON.stringify(payload))
+          console.log("Backend Send Payload", JSON.stringify(payload))
           setIsLoading(true);
           // Get a fresh token
         const auth0 = await createAuth0Client({
@@ -66,7 +110,6 @@ const OrderForm = () => {
         let token = ""
         try {
           token = await auth0.getTokenSilently({audience: audience});
-          console.log("awaited token", token)
         } catch (err) {
           console.log("token error", err)
         }
@@ -80,27 +123,28 @@ const OrderForm = () => {
                 body: JSON.stringify(payload)
             })
             const user_data = await user_fetch.json()	
-            console.log("USER_DATA", JSON.stringify(user_data))
+            console.log("BACKEND USER_DATA", JSON.stringify(user_data))
             setIsLoading(false);
-
         }
     }
     processSubmit();
   }); 
 
+  // Only process the pizza order if the user has verified their email
   if (submitted) {
-            // Only process the pizza order if the user has verified their email
-            if (user.email_verified) {
-              alert(`${salutation} ${lastName}, your order has been placed..`)
-            } else {
-              alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
-            }
-          }
+    if (user.email_verified) {
+      alert(`${salutation} ${lastName}, your yummy pizza is being prepared. It will be ready in 20 minues.`) 
+    } else {
+      alert(`${salutation} ${lastName}, you cannot place an order until you verify your email, ${user.email}. Please check your email for verification link.`)
+    }
+  }
 
-  // Build the order form once the user has logged in.
+  // Show loading spinny thing when waiting for stuff
   if (isLoading) {
     return <Loading />
   }
+
+  // Build the order form once the user has logged in.
   return (
     isAuthenticated && (
     <Container className={styles.form}>

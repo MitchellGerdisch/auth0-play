@@ -94,7 +94,7 @@ export function OrderForm(props) {
         }
 
         // Get the current data for the user from the backend DB
-        const uri = apiUrl+"?email="+user.email
+        const uri = apiUri+"?email="+user.email
         const user_fetch = await fetch(uri, {
           method: 'GET',
             headers: {
@@ -126,8 +126,6 @@ export function OrderForm(props) {
       } else {
         setSubmitted((submitted ? false : true))
         console.log("access token", accessToken)
-        // Push the data to the DB backend
-        updateDb
         alert(`${salutation} ${lastName}, your order has been placed..`)
       }
   }

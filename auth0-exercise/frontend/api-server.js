@@ -17,7 +17,7 @@ const appOrigin = serviceUrl || `http://localhost:${appPort}`;
 
 if (!domain || !audience) {
   throw new Error(
-    "Please make sure that auth_config.json is in place and populated"
+    "Please make sure that REACT_APP_AUTH0_xxx environment variables are set."
   );
 }
 

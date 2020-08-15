@@ -94,6 +94,7 @@ export function OrderForm(props) {
           method: 'GET',
             headers: {
                 //'Content-Type': 'text/plain',
+                'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
                 'Authorization': 'Bearer '+ accessToken,
               }
         })

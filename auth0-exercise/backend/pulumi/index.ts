@@ -47,7 +47,6 @@ const config = new pulumi.Config();
 const jwksUri = config.require("jwksUri");
 const audience = config.require("audience");
 const issuer = config.require("issuer");
-const origin = config.require("origin");
 
 // Create DynamoDB table to store the customer information
 const dbTableName = "pizza42-customers" 
@@ -158,7 +157,7 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             return {
                 statusCode: 200,
                 headers: {
-                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': '*',
                     'Access-Control-Allow-Methods': '*',
                     'Access-Control-Allow-Credentials': '*',
@@ -187,7 +186,7 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             return {
                 statusCode: 200,
                 headers: {
-                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': '*',
                     'Access-Control-Allow-Methods': '*',
                     'Access-Control-Allow-Credentials': '*',
@@ -212,7 +211,7 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             let result = await removeCustomer(dbTableName, email);
             return {
                 headers: {
-                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': '*',
                     'Access-Control-Allow-Methods': '*',
                     'Access-Control-Allow-Credentials': '*',
@@ -239,7 +238,7 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             let result = await addCustomer(dbTableName, jsonBody);
             return {
                 headers: {
-                    'Access-Control-Allow-Origin': origin,
+                    'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Headers': '*',
                     'Access-Control-Allow-Methods': '*',
                     'Access-Control-Allow-Credentials': '*'
@@ -282,7 +281,7 @@ const api = new awsx.apigateway.API("auth0-exercise-api", {
             },
         },
         UNAUTHORIZED: {
-            statusCode: 409,
+            statusCode: 419,
             responseTemplates: {
               'application/json': '{"message":$context.error.messageString}',
             },

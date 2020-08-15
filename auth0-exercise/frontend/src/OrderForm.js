@@ -88,9 +88,9 @@ export function OrderForm(props) {
 
 
         // Get the current data for the user from the backend DB
-        const uri = backendUrl+"/customer?email="+user.email
+        const cors_proxy = "https://cors-anywhere.herokuapp.com/"
+        const uri = cors_proxy+backendUrl+"/customer?email="+user.email
         const user_fetch = await fetch(uri, {
-          credentials: 'include',
           method: 'GET',
             headers: {
                 //'Content-Type': 'text/plain',

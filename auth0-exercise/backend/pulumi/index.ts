@@ -192,7 +192,7 @@ async function getGoogleConns(sub: string)  {
 }
 
 // Adds specific customer data to DB 
-async function addCustomer(dbName: string, customerData: {email: string, sub:string}) {
+async function addCustomer(dbName: string, customerData: {email: string, subId:string}) {
 
     // add google connections data to the user data
     let custSub = customerData.subId

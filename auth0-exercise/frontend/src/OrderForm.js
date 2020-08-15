@@ -29,6 +29,11 @@ export function OrderForm(props) {
   const backendUrl = process.env.REACT_APP_BACKEND_URL
   //const serviceUrl = process.env.REACT_APP_SERVICE_URL
 
+  // using a free cors proxy
+  const corsProxy = "https://cors-anywhere.herokuapp.com/"
+  // build the base API URL with the cors proxy transversal
+  const apiUri = corsProxy+backendUrl+"/customer"
+
   // Get auth0 data
   const {
     user,
@@ -60,17 +65,19 @@ export function OrderForm(props) {
     }
     getToken()
     console.log("getToken useEffect done");
-  }, [submitted, isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
+  });//, [submitted, isAuthenticated, domain, clientId, audience]); // the submitted value is used as a flag to get a token.
 
   // Prepopulate the form with any data available from the backend DB 
   useEffect(() => {
     async function setFormFields() {
       console.log("setFormFields")
 
+      /*
       setFirstName("First Name")
       setLastName("Last Name")
       setPhone("Phone Number")
       setSalutation("none")
+      */
 
       // Get a fresh token
       if (isAuthenticated) {
@@ -86,14 +93,11 @@ export function OrderForm(props) {
           console.log("token error", err)
         }
 
-
         // Get the current data for the user from the backend DB
-        const cors_proxy = "https://cors-anywhere.herokuapp.com/"
-        const uri = cors_proxy+backendUrl+"/customer?email="+user.email
+        const uri = apiUrl+"?email="+user.email
         const user_fetch = await fetch(uri, {
           method: 'GET',
             headers: {
-                //'Content-Type': 'text/plain',
                 'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
                 'Authorization': 'Bearer '+ accessToken,
               }
@@ -111,7 +115,7 @@ export function OrderForm(props) {
     }
     setFormFields()
     console.log("setFormFields useEffect done")
-  }, [isAuthenticated, user, domain, clientId, audience, accessToken, backendUrl]); // the submitted value is used as a flag to get a token.
+  });//, [isAuthenticated, user, domain, clientId, audience, accessToken, backendUrl]); // the submitted value is used as a flag to get a token.
 
   // Processes the form when the user hits submit.
   const handleSubmit = (evt) => {
@@ -122,6 +126,8 @@ export function OrderForm(props) {
       } else {
         setSubmitted((submitted ? false : true))
         console.log("access token", accessToken)
+        // Push the data to the DB backend
+        updateDb
         alert(`${salutation} ${lastName}, your order has been placed..`)
       }
   }

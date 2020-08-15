@@ -18,7 +18,7 @@ export function OrderForm(props) {
   const [phone, setPhone] = useState("630-555-1212");
   const [salutation, setSalutation] = useState("none");
   //const [order, setOrder] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [submits, setSubmits] = useState(0);
   // Token data for interacting with the backend API
   //const [accessToken, setToken] = useState("");
 
@@ -69,7 +69,7 @@ export function OrderForm(props) {
   // The form is only available if the user was authenticated. 
   useEffect(() => {
     async function processSubmit() {
-      console.log("processSubmit")
+      console.log("processSubmit - number of submits", submits)
       /*
       setFirstName("First Name")
       setLastName("Last Name")
@@ -91,26 +91,47 @@ export function OrderForm(props) {
           console.log("token error", err)
         }
 
-        // Get the current data for the user from the backend DB
-        const uri = apiUri+"?email="+user.email
-        const user_fetch = await fetch(uri, {
-          method: 'GET',
-            headers: {
-                'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
-                'Authorization': 'Bearer '+ token
-              }
-        })
-        const user_data = await user_fetch.json()	
-        console.log("USER_DATA", JSON.stringify(user_data))
-        if (user_data) {
-          setFirstName(user_data.firstName)
-          setLastName(user_data.lastName)
-          setPhone(user_data.phone)
-          setSalutation(user_data.salutation)
-        } 
+        // If first time in, get the current data for the user from the backend DB
+        if (submits === 0) {
+            const uri = apiUri+"?email="+user.email
+            const user_fetch = await fetch(uri, {
+              method: 'GET',
+                headers: {
+                    'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
+                    'Authorization': 'Bearer '+ token
+                  }
+            })
+            const user_data = await user_fetch.json()	
+            console.log("USER_DATA", JSON.stringify(user_data))
+            if (user_data) {
+              setFirstName(user_data.firstName)
+              setLastName(user_data.lastName)
+              setPhone(user_data.phone)
+              setSalutation(user_data.salutation)
+            } 
+        } else {
+          // Push data to DB backend
+          const body = {
+            "lastName": lastName,
+            "firstName": firstName,
+            "phone": phone,
+            "salutation": salutation,
+          }
+          const uri = apiUri
+            const user_fetch = await fetch(uri, {
+              method: 'POST',
+                headers: {
+                    'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
+                    'Authorization': 'Bearer '+ token
+                  },
+                body: JSON.stringify(body)
+            })
+            const user_data = await user_fetch.json()	
+            console.log("USER_DATA", JSON.stringify(user_data))
+        }
       }
     processSubmit()
-  },[submitted, domain, audience, clientId, apiUri, user]); // the submitted value is used as a flag 
+  },[submits, firstName, lastName, phone, salutation, domain, audience, clientId, apiUri, user]); // the submitted value is used as a flag 
 
   // Processes the form when the user hits submit.
   const handleSubmit = (evt) => {
@@ -119,7 +140,8 @@ export function OrderForm(props) {
     if (user.email_verified === false) {
       alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
     } else {
-      setSubmitted((submitted ? false : true)) // toggle submitted to drive async functions
+      const newsub = submits+1
+      setSubmits(newsub) //keep track of number of submissions
       const address = (salutation ? salutation : "");
       alert(`${address} ${lastName}, your order has been placed..`)
     }

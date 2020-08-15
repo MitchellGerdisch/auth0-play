@@ -6,6 +6,46 @@
 	},
 	"item": [
 		{
+			"name": "auth0 authentication",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "12757050-fa86-4372-9d55-6f3f8e82310f",
+						"exec": [
+							"resp_json = pm.response.json();",
+							"pm.environment.set(\"ACCESS_TOKEN\", resp_json.access_token)"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"client_id\": \"{{CLIENT_ID}}\",\n\t\"client_secret\": \"{{CLIENT_SECRET}}\",\n\t\"audience\": \"{{AUDIENCE}}\",\n\t\"grant_type\": \"client_credentials\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTH0_AUTHENTICATOR}}",
+					"host": [
+						"{{AUTH0_AUTHENTICATOR}}"
+					]
+				},
+				"description": "{{AUTH0_AUTHENTICATION}} contains the Auth0 Authenticator URL.\nE.g. https://xxxx.auth0.com/oauth/token\nBODY VARIABLES:\n{{CLIENT_ID}} - from Auth0 Application definition\n{{CLIENT_SECRET}} - from Auth0 Application definition\n{{AUDIENCE}} - from Auth0"
+			},
+			"response": []
+		},
+		{
 			"name": "get  customer",
 			"protocolProfileBehavior": {
 				"disableBodyPruning": true
@@ -22,13 +62,19 @@
 					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Requested-With",
+						"value": "corsproxy",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "urlencoded",
 					"urlencoded": []
 				},
 				"url": {
-					"raw": "{{API_GATEWAY_URL}}/customer?email=mitch@boo.com",
+					"raw": "{{API_GATEWAY_URL}}/customer?email=auth0.tester@jesslex.com",
 					"host": [
 						"{{API_GATEWAY_URL}}"
 					],
@@ -38,7 +84,7 @@
 					"query": [
 						{
 							"key": "email",
-							"value": "mitch@boo.com"
+							"value": "auth0.tester@jesslex.com"
 						}
 					]
 				},
@@ -101,7 +147,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\": \"mitch@boo.com\",\n    \"lastName\": \"Johnson\",\n    \"firstName\": \"Mitch\",\n    \"phone\": \"6305551212\",\n    \"gender\": \"M\",\n    \"googleConns\": \"6\"\n}"
+					"raw": "{\n    \"email\": \"auth0.tester@jesslex.com\",\n    \"lastName\": \"Johnson\",\n    \"firstName\": \"Mitch\",\n    \"phone\": \"6305551212\",\n    \"gender\": \"M\",\n    \"googleConns\": \"6\"\n}"
 				},
 				"url": {
 					"raw": "{{API_GATEWAY_URL}}/customer",
@@ -116,42 +162,31 @@
 			"response": []
 		},
 		{
-			"name": "auth0 authentication",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"id": "12757050-fa86-4372-9d55-6f3f8e82310f",
-						"exec": [
-							"resp_json = pm.response.json();",
-							"pm.environment.set(\"ACCESS_TOKEN\", resp_json.access_token)"
-						],
-						"type": "text/javascript"
-					}
-				}
-			],
+			"name": "Management API Call to Get User Record",
 			"request": {
 				"auth": {
-					"type": "noauth"
-				},
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n\t\"client_id\": \"{{CLIENT_ID}}\",\n\t\"client_secret\": \"{{CLIENT_SECRET}}\",\n\t\"audience\": \"{{AUDIENCE}}\",\n\t\"grant_type\": \"client_credentials\"\n}\n",
-					"options": {
-						"raw": {
-							"language": "json"
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{ACCESS_TOKEN}}",
+							"type": "string"
 						}
-					}
-				},
-				"url": {
-					"raw": "{{AUTH0_AUTHENTICATOR}}",
-					"host": [
-						"{{AUTH0_AUTHENTICATOR}}"
 					]
 				},
-				"description": "{{AUTH0_AUTHENTICATION}} contains the Auth0 Authenticator URL.\nE.g. https://xxxx.auth0.com/oauth/token\nBODY VARIABLES:\n{{CLIENT_ID}} - from Auth0 Application definition\n{{CLIENT_SECRET}} - from Auth0 Application definition\n{{AUDIENCE}} - from Auth0"
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{AUTH0_MANAGEMENT_API}}/users/{{USERID}}",
+					"host": [
+						"{{AUTH0_MANAGEMENT_API}}"
+					],
+					"path": [
+						"users",
+						"{{USERID}}"
+					]
+				},
+				"description": "Mainly for getting the google or other 3rd party token"
 			},
 			"response": []
 		}

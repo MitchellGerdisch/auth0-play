@@ -17,10 +17,18 @@ and this pulumi example: https://github.com/pulumi/examples/blob/master/aws-ts-a
     - jwksUri
     - audience
     - issuer
+- Additionally to interact with the google API, the backend needs to talk to the Auth0 management API. Therefore, some credentials need to be stored for that. 
+    - In auth0.com UI, go to APIs
+    - Find the Management API (or create one if needed)
+    - Go to Test tab and select the API explorer application.
+    - Note the client_id, client_secret and audience (which is different than the audience noted above).
 - Set pulumi configuration with the values
     - pulumi config set --secret jwksUri <jwksURI>
     - pulumi config set --secret audience <audience>
     - pulumi config set --secret issuer <issuer>
+    - pulumi config set --secret mgmt_client_id <client_id>
+    - pulumi config set --secret mgmt_client_secret <client_secret>
+    - pulumi config set --secret mgmt_audience <mgmt_audience>
 - npm install @types/jwks-rsa
 - npm install
 

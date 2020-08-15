@@ -1,10 +1,5 @@
-# auth0 exercise
-Checklist
-- Launch backend - see backend README
-- Launch frontend
-  - Set environment variables locally or using Amplify
-    - REACT_APP_AUTH0_DOMAIN="DOMAIN_FROM_AUTH0"
-    - REACT_APP_AUTH0_CLIENT_ID="CLIENT_ID_FROM_AUTH0"
-    - REACT_APP_AUTH0_AUDIENCE="AUDIENCE_FROM_AUTH0"
-    - REACT_APP_SERVICE_URL="URL_OF_FRONTEND_FROM_LOCAL_OR_AMPLIFY"
-    - REACT_APP_BACKEND_URL="INVOKE_URL_FROM_API_GATEWAY_STAGE"
+# auth0 exercise set up
+- Launch backend via pulumi script
+  - see backend README
+- Launch frontend 
+  - Can run via Amplify or locally - see frontend README

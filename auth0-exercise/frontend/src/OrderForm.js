@@ -9,6 +9,10 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import createAuth0Client from '@auth0/auth0-spa-js';
+import styles from './OrderForm.css';
+import {
+  Container, Form
+} from 'reactstrap';
 
 // Build the order form and manage orders.
 export function OrderForm(props) {
@@ -17,7 +21,7 @@ export function OrderForm(props) {
   const [lastName, setLastName] = useState("Last Name");
   const [phone, setPhone] = useState("630-555-1212");
   const [salutation, setSalutation] = useState("none");
-  //const [order, setOrder] = useState("");
+  const [orderInfo, setOrderInfo] = useState("");
   const [submits, setSubmits] = useState(0);
   // Token data for interacting with the backend API
   //const [accessToken, setToken] = useState("");
@@ -67,8 +71,7 @@ export function OrderForm(props) {
   // Process the form with any data available from the backend DB 
   // The form is only available if the user was authenticated. 
   useEffect(() => {
-    async function processSubmit() {
-      console.log("processSubmit - number of submits", submits)
+    const processSubmit = async () => {
       /*
       setFirstName("First Name")
       setLastName("Last Name")
@@ -91,7 +94,7 @@ export function OrderForm(props) {
         }
 
         // If first time in, get the current data for the user from the backend DB
-        if (submits === 0) {
+        if ((typeof(user) !== 'undefined') && (submits === 0)) {
             const uri = apiUri+"?email="+user.email
             const user_fetch = await fetch(uri, {
               method: 'GET',
@@ -108,13 +111,14 @@ export function OrderForm(props) {
               setPhone(user_data.phone)
               setSalutation(user_data.salutation)
             } 
-        } else {
+        } else if (submits > 0) {
           // Push data to DB backend
           const body = {
-            "lastName": lastName,
-            "firstName": firstName,
-            "phone": phone,
-            "salutation": salutation,
+            "email": user.email,
+            "lastName": orderInfo.lastName,
+            "firstName": orderInfo.firstName,
+            "phone": orderInfo.phone,
+            "salutation": orderInfo.salutation,
           }
           console.log("Body", JSON.stringify(body))
           const uri = apiUri
@@ -129,14 +133,15 @@ export function OrderForm(props) {
             const user_data = await user_fetch.json()	
             console.log("USER_DATA", JSON.stringify(user_data))
         }
-      }
-    processSubmit()
-  },[submits, firstName, lastName, phone, salutation, domain, audience, clientId, apiUri, user]); // the submitted value is used as a flag 
+    }
+    processSubmit();
+  }, [submits,orderInfo,apiUri,audience,clientId,domain,user]); //,[submits, firstName, lastName, phone, salutation, domain, audience, clientId, apiUri, user]); // the submitted value is used as a flag 
 
   // Processes the form when the user hits submit.
   const handleSubmit = (evt) => {
     evt.preventDefault();
-    console.log("handleSubmit")
+    console.log("handleSubmit",JSON.stringify(evt))
+    setOrderInfo("goo")
     if (user.email_verified === false) {
       alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
     } else {
@@ -150,7 +155,15 @@ export function OrderForm(props) {
   // Build the order form once the user has logged in.
   return (
     isAuthenticated && (
-    <form onSubmit={handleSubmit}>
+    <Container className={styles.form}>
+    <Form onSubmit={()=>
+      setOrderInfo({
+        firstNane: firstName,
+        lastName: lastName,
+        phone: phone,
+        salutation: salutation
+      })
+    }>
       <label>
         Salutation:
         <select defaultValue={salutation} onChange={e => { setSalutation(e.target.value)}}> 
@@ -165,7 +178,7 @@ export function OrderForm(props) {
         <input
           type="text"
           value={firstName}
-          onBlur={e => {
+          onChange={e => {
             setFirstName(e.target.value)
           }}
         />
@@ -175,7 +188,7 @@ export function OrderForm(props) {
         <input
           type="text"
           value={lastName}
-          onBlur={e => {
+          onChange={e => {
             setLastName(e.target.value)
           }}
         />
@@ -185,14 +198,15 @@ export function OrderForm(props) {
         <input
           type="text"
           value={phone}
-          onBlur={e => {
+          onChange={e => {
             setPhone(e.target.value)
           }}
         />
       </label>
 
       <input type="submit" value="Submit" />
-    </form>
+    </Form>
+    </Container>
   )
   )
 }

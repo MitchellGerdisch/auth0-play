@@ -1,9 +1,11 @@
 /*
- * Handles the pizza order form and related interactions with the Auth0 and backend APIs.
+ * Handles the pizza order form and related interactions with Auth0 and backend APIs.
  * Main functions taken:
  * - Build the order form once the user is authenticated.
  * - Prepopulate the order form with any existing data known about the user.
- * - Update the backend DB once the form is submitted (assuming the user is verified).
+ * - Update the backend DB when the form is submitted (regardless of whether or not verified).
+ * - Only process an order if the user is verified.
+ *   In the context of this app, processing an order means pushing the order to the backend DB where it is stored with a timestamp.
  */
 
 import React, { useState, useEffect } from "react";
@@ -23,34 +25,35 @@ const backendUrl = process.env.REACT_APP_BACKEND_URL
 
 // Build the order form and manage orders.
 const OrderForm = () => {
-  const [firstName, setFirstName] = useState("First Name");
-  const [lastName, setLastName] = useState("Last Name");
-  const [phone, setPhone] = useState("630-555-1212");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [salutation, setSalutation] = useState("none");
+  const [pizzaSize, setPizzaSize] = useState("small");
+  const [pizzaFlavor, setPizzaFlavor] = useState("cheese");
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [firstTime, setFirstTime] = useState(true);
 
-
   //const {user, isAuthenticated} = useAuth0()
   const {user,isAuthenticated} = useAuth0()
 
-  console.log("AUTH0 USER DATA", JSON.stringify(user))
-
-  // Process the form with any data available from the backend DB 
-  // The form is only available if the user was authenticated. 
+  // Process the form with any data available from the backend DB.
   useEffect(() => {
     const processSubmit = async () => {
-        // using a free cors proxy
-        const corsProxy = "https://cors-anywhere.herokuapp.com/"
-        // build the base API URL with the cors proxy transversal
-        const apiUri = corsProxy+backendUrl+"/customer"
+      // Using a free cors proxy to deal with CORS challenges between front and back ends.
+      // Production would deploy front and backend with same domain.
+      const corsProxy = "https://cors-anywhere.herokuapp.com/"
+      // Build the base API URL with the cors proxy transversal inserted in there.
+      const apiUri = corsProxy+backendUrl+"/customer"
+ 
+      // If this is the first time here since the user authenticated,
+      // go and grab any data we have in the backend to prepopulate the form.
+      if (isAuthenticated && firstTime) {
+        setFirstTime(false)
+        setIsLoading(true); // show spinny circle thing while data is collected.
 
-        // See if we already know this use and fill in the form if we do
-        if (isAuthenticated && firstTime) {
-          setFirstTime(false)
-          setIsLoading(true);
-          // Get a fresh token
+        // Get a fresh Auth0 token to call the backend.
         const auth0 = await createAuth0Client({
           domain: domain,
           client_id: clientId
@@ -61,7 +64,9 @@ const OrderForm = () => {
         } catch (err) {
           console.log("token error", err)
         }
-        console.log(token)
+
+        // Call backend API to get user info if available
+        try {
           const uri = apiUri+"?email="+user.email;
           const user_fetch = await fetch(uri, {
             method: 'GET',
@@ -72,38 +77,81 @@ const OrderForm = () => {
           })
           const user_data = await user_fetch.json()	
           console.log("BACKEND USER_DATA", JSON.stringify(user_data))
-          if (typeof(user_data.email) !== 'undefined') {
-            // Then we found someone, so fill in what we can
-            if (typeof(user_data.firstName) !== 'undefined') {
-              setFirstName(user_data.firstName)
-            }
-            if (typeof(user_data.lastName) !== 'undefined') {
-              setLastName(user_data.lastName)
-            }
-            if (typeof(user_data.phone) !== 'undefined') {
-              setPhone(user_data.phone)
-            }
-            if (typeof(user_data.salutation) !== 'undefined') {
-              setSalutation(user_data.salutation)
-            }
-          } 
-          setIsLoading(false)
+        ///// Check if we have any good data from the backend
+        /////if (typeof(user_data.email) !== 'undefined') {
+          // Then we found someone, so fill in what we can
+          if (typeof(user_data.firstName) !== 'undefined') {
+            setFirstName(user_data.firstName)
+          }
+          if (typeof(user_data.lastName) !== 'undefined') {
+            setLastName(user_data.lastName)
+          }
+          if (typeof(user_data.phone) !== 'undefined') {
+            setPhone(user_data.phone)
+          }
+          if (typeof(user_data.salutation) !== 'undefined') {
+            setSalutation(user_data.salutation)
+          }
+        } catch {
+          console.log("User, "+user.email+", not found in backend DB.")
+        }
+        setIsLoading(false)
+      }
+
+      // This is where we go if the user hits the submit button
+      if (submitted) {
+        setSubmitted(false); //reset for next time
+        setIsLoading(true); // spinny thingy
+
+        // Build data to push to the DB backend regardless of whether verified
+        const userInfo = {
+          "email": user.email,
+          "subId": user.sub,
+          "lastName": lastName,
+          "firstName": firstName,
+          "phone": phone,
+          "salutation": salutation,
         }
 
-        if (submitted) {
-          setSubmitted(false); //reset
-          // Push user data to DB backend regardless
-          const payload = {
-            "email": user.email,
-            "subId": user.sub,
-            "lastName": lastName,
-            "firstName": firstName,
-            "phone": phone,
-            "salutation": salutation,
+        // Will be used to push data to the DB
+        let payload = {};
+
+        /* 
+         * Two things happen when the user hits submit and is a verified user:
+         * - An order object is created to be stored in the backend DB for the current time.
+         * - A message it posted to indicate the pizza order is being processed.
+         */
+        if (user.email_verified) {
+          // Build a date object of the form year_month_date to be used for storing the order in the DB.
+          let now = new Date();
+          let date = [ now.getFullYear(), (now.getMonth() + 1), now.getDate(), now.getHours(), now.getMinutes()]; 
+          let dbDateKey = date.join(":");
+          // Build a pizza order object to store in the DB.
+          const pizzaOrder = {
+            pizzaOrder: {
+              orderDate: dbDateKey,
+              order: {
+                "pizzaSize": pizzaSize,
+                "pizzaFlavor": pizzaFlavor
+              }
+            }
           }
-          console.log("Backend Send Payload", JSON.stringify(payload))
-          setIsLoading(true);
-          // Get a fresh token
+          // Add the pizza order to the info being sent to the DB.
+          payload = {
+            ...userInfo,
+            ...pizzaOrder
+          }
+          // Pretend we are actually doing something with this pizza order.
+          alert(`Your ${pizzaSize} ${pizzaFlavor} pizza is being prepared. It will be ready in 20 minues.`) 
+        } else {
+          // User has to verify email before we'll take a pizza order.
+          // But we'll store the information we have about the user.
+          payload = userInfo
+          alert(`Please, verify your email, ${user.email} before placing an order. Check your email for verification link.`)
+        }
+
+        // Send the user data and possibly the pizza order to the backend.
+        // Get a fresh token
         const auth0 = await createAuth0Client({
           domain: domain,
           client_id: clientId
@@ -114,31 +162,24 @@ const OrderForm = () => {
         } catch (err) {
           console.log("token error", err)
         }
-          const uri = apiUri
-            const user_fetch = await fetch(uri, {
-              method: 'POST',
-                headers: {
-                    'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
-                    'Authorization': 'Bearer '+ token
-                  },
-                body: JSON.stringify(payload)
-            })
-            const user_data = await user_fetch.json()	
-            console.log("BACKEND USER_DATA", JSON.stringify(user_data))
-            setIsLoading(false);
-        }
+
+        // Build API to send data to the backend
+        const uri = apiUri
+          const user_fetch = await fetch(uri, {
+            method: 'POST',
+              headers: {
+                  'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
+                  'Authorization': 'Bearer '+ token
+                },
+              body: JSON.stringify(payload)
+          })
+          const user_data = await user_fetch.json()	
+          console.log("BACKEND USER_DATA", JSON.stringify(user_data))
+          setIsLoading(false);
+      }
     }
     processSubmit();
   }); 
-
-  // Only process the pizza order if the user has verified their email
-  if (submitted) {
-    if (user.email_verified) {
-      alert(`${salutation} ${lastName}, your yummy pizza is being prepared. It will be ready in 20 minues.`) 
-    } else {
-      alert(`${salutation} ${lastName}, you cannot place an order until you verify your email, ${user.email}. Please check your email for verification link.`)
-    }
-  }
 
   // Show loading spinny thing when waiting for stuff
   if (isLoading) {
@@ -153,6 +194,22 @@ const OrderForm = () => {
       setSubmitted(true);
       event.preventDefault();
     }}>
+      <label>
+        Pizza Size:
+        <select defaultValue={pizzaSize} onBlur={e => {setPizzaSize(e.target.value)}}> 
+          <option value="large">Large</option>
+          <option value="medium">Medium</option>
+          <option value="small">Small</option>
+        </select>
+      </label>
+      <label>
+        Pizza Flavor:
+        <select defaultValue={pizzaFlavor} onBlur={e => {setPizzaFlavor(e.target.value)}}> 
+          <option value="sausage">Cheese and Sausage</option>
+          <option value="pepperoni">Cheese and Pepperoni</option>
+          <option value="cheese">Cheese Only</option>
+        </select>
+      </label>
       <label>
         Salutation:
         <select defaultValue={salutation} onBlur={e => { setSalutation(e.target.value)}}> 
@@ -201,76 +258,3 @@ const OrderForm = () => {
 }
 
 export default OrderForm;
-/**** /
-         // If first time in, get the current data for the user from the backend DB
-        if ((typeof(user) !== 'undefined') && (submits === 0)) {
-            const uri = apiUri+"?email="+user.email
-            const user_fetch = await fetch(uri, {
-              method: 'GET',
-                headers: {
-                    'X-Requested-With': 'corsproxy', // can be any value - needed for cors proxy
-                    'Authorization': 'Bearer '+ token
-                  }
-            })
-            const user_data = await user_fetch.json()	
-            console.log("USER_DATA", JSON.stringify(user_data))
-            if (user_data) {
-              setFirstName(user_data.firstName)
-              setLastName(user_data.lastName)
-              setPhone(user_data.phone)
-              setSalutation(user_data.salutation)
-            } 
-        } else if (submits > 0) { 
-
-
-*/
-
-
-
-  //const serviceUrl = process.env.REACT_APP_SERVICE_URL
-//,[submits, firstName, lastName, phone, salutation, domain, audience, clientId, apiUri, user]); // the submitted value is used as a flag 
-  ///return("nothingrightnow")
-////}
-  /***** 
-  // Processes the form when the user hits submit.
-  const handleSubmit = (evt) => {
-    evt.preventDefault();
-    console.log("handleSubmit",JSON.stringify(evt))
-    setOrderInfo("goo")
-    if (user.email_verified === false) {
-      alert(user.email+' needs to be verified before placing order. Check your email for verification link.')
-    } else {
-      const newsub = submits+1
-      setSubmits(newsub) //keep track of number of submissions
-      const address = (salutation ? salutation : "");
-      alert(`${address} ${lastName}, your order has been placed..`)
-    }
-  }
-
-  /****** 
-  // Should be run when the page is first set
-  // useEffect() provides a mechanism to make async calls in render.
-  useEffect(() => {
-    async function getToken() {
-      console.log("getToken")
-      // Only want to try and get a token if user is authenticated
-      if (isAuthenticated) {
-        const auth0 = await createAuth0Client({
-          domain: domain,
-          client_id: clientId
-        })
-        try {
-          // VERY IMPORTANT: You must pass the audience to getTokenSilently to get a proper token.
-          const token = await auth0.getTokenSilently({audience: audience});
-          console.log("awaited token", token)
-          setToken(token)
-        } catch (err) {
-          console.log("token error", err)
-        }
-      }
-      console.log("getToken done")
-    }
-    getToken()
-    console.log("getToken useEffect done");
-  }, [isAuthenticated, domain, clientId, audience]); 
-  *******/

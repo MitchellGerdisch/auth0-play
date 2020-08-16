@@ -8,7 +8,8 @@ For each customer the following information is stored:
 * lastName: (string) Customer Last Name
 * phone: (string) Customer Phone Number
 * gender: (string) Customer Gender
-* googleConns: (string) Customer Google Connections Count
+* googleConns: (number) Customer Google Connections Count
+* subId: (string) Auth0 subscriber ID
 
 # API Specification
 * GET /customer?email={CustomerEmail}

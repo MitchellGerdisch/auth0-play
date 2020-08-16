@@ -26,4 +26,4 @@
 
 # Note about CORS
 The frontend has a hard-coded cors-proxy in the code at this time (see the OrderForm module).
-As much as the author tried, he could not get the API gateway and Amplify to play CORS nicely together.
+As much as the author tried, he could not get the API gateway and Amplify to play CORS nicely together. In the real world, the frontend and backend could use the same domain and the CORS challenges would go away.

@@ -7,10 +7,16 @@
  * - DynamoDB for the backend database
  * 
  * INITIAL SETUP
- * 1) Auth0: Create API
+ * 1) Login to Auth0.com and Create API
  * 2) Go to quickstart and select node.js
  * 3) Note the jwksUri, audience, issuer and create pulumi config set --secret for these:
  *    e.g. pulumi config set --secret issuer https://goo.auth0.com
+ * 
+ * Using the API:
+ * 1) Look at API gateway in AWS and go to the stage and copy the URL
+ * 2) Create a GET to that URL/<resoruce> (e.g. https://URL/customers)
+ * 3) Set Authorization Token to the ACCESS_TOKEN returned by the authentication above.
+ * 4) Run the GET and you should see output commensurate with the event handler code below.t
  * 
  * TESTING with POSTMAN
  * Postman export file can be found under the main folder.
@@ -23,15 +29,8 @@
 	"audience": "{{AUDIENCE}}",
 	"grant_type": "client_credentials"
    }
- * 
- * Using the API:
- * 1) Look at API gateway in AWS and got to the stage and copy the URL
- * 2) Create a GET to that URL/<resoruce> (e.g. https://URL/customers)
- * 3) Set Authorization Token to the ACCESS_TOKEN returned by the authentication above.
- * 4) Run the GET and you should see output commensurate with the event handler code below.
+ *
  */
-
-
 
 import * as awsx from "@pulumi/awsx";
 import * as aws from "@pulumi/aws";
@@ -66,10 +65,12 @@ const fileTable = new aws.dynamodb.Table(dbTableName, {
     hashKey: "email",
     readCapacity: 5,
     writeCapacity: 5,
+    /*
     ttl: {
         attributeName: "TimeToExist",
         enabled: false,
     },
+    */
     name: dbTableName, // assures the table name is known. to-do: figure out how to use generated table name in the magic function.
 });
 
@@ -130,12 +131,12 @@ async function removeCustomer(dbName: string, email: string) {
     }).promise();
     return tableItem;
 }
-// Interacts with google API to get connections data
-async function getGoogleConns(sub: string)  {
-    console.log("DEBUG getGoogleConns", sub)
 
-    // call management api for access token
-    // get token
+// Returns Auth0 management API access token.
+// This token is used with the Auth0 management API (which is different than user auth) to interact 
+// with Auth0 administrator functions.
+async function getAuth0MgmtAccessToken() {
+
     const token_url = issuer+"oauth/token"
     const reqheaders = { "Content-Type":"application/json", } 
     type PayLoad = {
@@ -162,33 +163,75 @@ async function getGoogleConns(sub: string)  {
     const mgmt_token = token_data.access_token;
     console.log("DEBUG mgmt_token",mgmt_token)
 
-    // get user info
-    let user_url = mgmtAudience+"users/"+sub;
+    return mgmt_token
+}
 
-    const user_fetch = await fetch(user_url, {
+// Takes Auth0 sub ID (e.g. "auth0|1234566") and an Auth0 management access token.
+// Returns the detailed user data as stringified JSON.
+async function getAuth0DetailedUser(sub: string, mgmtToken: string) {
+    // Auth0 user info API
+    let userUrl = mgmtAudience+"users/"+sub;
+
+    const userFetch = await fetch(userUrl, {
         method: 'GET',
-        headers: {'Authorization': 'Bearer '+ mgmt_token }
+        headers: {'Authorization': 'Bearer '+ mgmtToken }
     })
-    const user_data = await user_fetch.json();
-    console.log("DEBUG detailed user_data",JSON.stringify(user_data))
+    const userData = await userFetch.json();
+    const stringyUserData = JSON.stringify(userData);
 
-    let google_access_token = "";
-    let identities = user_data.identities;
+    console.log("DEBUG detailed user_data",stringyUserData)
+    return stringyUserData
+}
+
+// Takes stringified Auth0 detailed user data JSON
+// Returns the google access token from that data.
+function getGoogleUserInfo(auth0UserData: string) {
+
+    let userData = JSON.parse(auth0UserData);
+    let googleAccessToken = "";
+    let googleUserId = "";
+    let identities = userData.identities;
     for (let i = 0; i < identities.length; i++) {
         let id = identities[i];
         if (id.provider === "google-oauth2") {
-            google_access_token = id.access_token;
+            googleAccessToken = id.access_token;
+            googleUserId = id.user_id;
         }
     }
-    console.log("DEBUG google_access_token", google_access_token)
+
+    return {googleAccessToken, googleUserId};
+}
+
+/*
+ * Calls google People API to get connection info.
+ * https://github.com/google/google-api-javascript-client/blob/master/samples/authSample.html
+ * https://developers.google.com/people/api/rest/
+*/
+async function getGoogleConns(sub: string)  {
+    console.log("DEBUG getGoogleConns", sub)
+
+    // Get google user info from Auth0
+    const auth0MgmtToken = await getAuth0MgmtAccessToken() 
+    const auth0UserData = await getAuth0DetailedUser(sub, auth0MgmtToken) 
+    const googleInfo = getGoogleUserInfo(auth0UserData)
+    const googleAccessToken = googleInfo.googleAccessToken;
+    const googleUserId = googleInfo.googleUserId;
 
     let googleConns = 0;
-    /****
-     * At this point need to call gogole api
-     * https://github.com/google/google-api-javascript-client/blob/master/samples/authSample.html
-     * https://developers.google.com/people/api/rest/
-     */
-    return(googleConns)
+
+    const googlePeopleUrl = "https://people.googleapis.com/v1/people/"+googleUserId+"?access_token="+googleAccessToken+"&personFields=memberships,emailAddresses,names,relations,organizations,userDefined"
+
+    const userDataFetch = await fetch(googlePeopleUrl, {
+        method: 'GET',
+        headers: {'Accept': '*/*'}
+    })
+    const userData = await userDataFetch.json();
+    const stringyUserData = JSON.stringify(userData);
+    console.log("DEBUG GOOGLE user_data",stringyUserData)
+
+    googleConns = userData.names.length;
+
+    return googleConns
 }
 
 // Adds specific customer data to DB 
@@ -196,7 +239,12 @@ async function addCustomer(dbName: string, customerData: {email: string, subId:s
 
     // add google connections data to the user data
     let custSub = customerData.subId
-    const googleConns = await getGoogleConns(custSub)
+    let googleConns = 0
+    console.log("DEBUG subId: ", custSub)
+    console.log("DEBUG google loc in subId", custSub.search("google-oauth2"))
+    if (custSub.search("google-oauth2") != -1) {
+        googleConns = await getGoogleConns(custSub) 
+    }
     let gcons = {
         googleConns: googleConns
     }

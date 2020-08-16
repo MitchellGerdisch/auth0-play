@@ -12,6 +12,8 @@ and this pulumi example: https://github.com/pulumi/examples/blob/master/aws-ts-a
     - Line 103 change "const signingKey = key.publicKey || key.rsaPublicKey" to "const signingKey = key.getPublicKey()"
 
 # Configuration and Setup Notes
+- npm install googleapis
+- npm install node-fetch 
 - Login to Auth0 and select quickstart for the API you created. 
 - You will see values for the following items: 
     - jwksUri

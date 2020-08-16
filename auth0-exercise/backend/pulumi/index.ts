@@ -18,7 +18,7 @@
  * 3) Set Authorization Token to the ACCESS_TOKEN returned by the authentication above.
  * 4) Run the GET and you should see output commensurate with the event handler code below.t
  * 
- * TESTING with POSTMAN
+ * TESTING the created backend API with POSTMAN
  * Postman export file can be found under the main folder.
  * Authentication:
  * POST to the auth0 authenticator.
@@ -52,7 +52,8 @@ const mgmtClientId = config.require("mgmt_client_id");
 const mgmtClientSecret = config.require("mgmt_client_secret");
 const mgmtAudience = config.require("mgmt_audience");
 
-// Create DynamoDB table to store the customer information
+// Create DynamoDB table to store the customer information.
+// It is keyed by the user email address.
 const dbTableName = "pizza42-customers" 
 const fileTable = new aws.dynamodb.Table(dbTableName, {
     attributes: [
@@ -86,7 +87,7 @@ const authorizerLambda = async (event: awsx.apigateway.AuthorizerEvent) => {
     }
 };
 
-// Gets specific customer data from DB 
+// Helper function to retrieve specific customer data from DB 
  async function getCustomer(dbName: string, email: string) {
     const dbClient = new AWS.DynamoDB.DocumentClient();
     // DynamoDB entry
@@ -121,7 +122,7 @@ async function removeCustomer(dbName: string, email: string) {
     }
     console.log("REMOVE dbParams",dbParams)
 
-    // get the DB entry
+    // Delete the DB entry
     const tableItem = await dbClient.delete(dbParams, function(err, data) {
         if (err) {
             console.log("DB REMOVE ERROR",err);
@@ -136,7 +137,6 @@ async function removeCustomer(dbName: string, email: string) {
 // This token is used with the Auth0 management API (which is different than user auth) to interact 
 // with Auth0 administrator functions.
 async function getAuth0MgmtAccessToken() {
-
     const token_url = issuer+"oauth/token"
     const reqheaders = { "Content-Type":"application/json", } 
     type PayLoad = {
@@ -184,9 +184,8 @@ async function getAuth0DetailedUser(sub: string, mgmtToken: string) {
 }
 
 // Takes stringified Auth0 detailed user data JSON
-// Returns the google access token from that data.
+// Returns the google access token from that data if found.
 function getGoogleUserInfo(auth0UserData: string) {
-
     let userData = JSON.parse(auth0UserData);
     let googleAccessToken = "";
     let googleUserId = "";
@@ -198,7 +197,6 @@ function getGoogleUserInfo(auth0UserData: string) {
             googleUserId = id.user_id;
         }
     }
-
     return {googleAccessToken, googleUserId};
 }
 
@@ -208,8 +206,6 @@ function getGoogleUserInfo(auth0UserData: string) {
  * https://developers.google.com/people/api/rest/
 */
 async function getGoogleConns(sub: string)  {
-    console.log("DEBUG getGoogleConns", sub)
-
     // Get google user info from Auth0
     const auth0MgmtToken = await getAuth0MgmtAccessToken() 
     const auth0UserData = await getAuth0DetailedUser(sub, auth0MgmtToken) 
@@ -217,10 +213,8 @@ async function getGoogleConns(sub: string)  {
     const googleAccessToken = googleInfo.googleAccessToken;
     const googleUserId = googleInfo.googleUserId;
 
-    let googleConns = 0;
-
+    // Google people API URI
     const googlePeopleUrl = "https://people.googleapis.com/v1/people/"+googleUserId+"?access_token="+googleAccessToken+"&personFields=memberships,emailAddresses,names,relations,organizations,userDefined"
-
     const userDataFetch = await fetch(googlePeopleUrl, {
         method: 'GET',
         headers: {'Accept': '*/*'}
@@ -229,40 +223,35 @@ async function getGoogleConns(sub: string)  {
     const stringyUserData = JSON.stringify(userData);
     console.log("DEBUG GOOGLE user_data",stringyUserData)
 
-    googleConns = userData.names.length;
+    let googleConns = userData.names.length;
 
     return googleConns
 }
 
 // Adds specific customer data to DB 
-async function addCustomer(dbName: string, customerData: {email: string, subId:string}) {
-
-    // add google connections data to the user data
-    let custSub = customerData.subId
+async function addCustomer(dbName: string, newCustomerData: {email: string, subId:string}) {
+    // add google connections data to the user data if a google user
     let googleConns = 0
-    console.log("DEBUG subId: ", custSub)
-    console.log("DEBUG google loc in subId", custSub.search("google-oauth2"))
+    const custSub = newCustomerData.subId
+    const email = newCustomerData.email
     if (custSub.search("google-oauth2") != -1) {
         googleConns = await getGoogleConns(custSub) 
     }
-    let gcons = {
+    const gcons = {
         googleConns: googleConns
     }
-    let dbItem = {
-        ...customerData,
+
+    const dbItem = {
+        ...newCustomerData,
         ...gcons
     }
-    console.log("DEBUG dbItem",JSON.stringify(dbItem))
-
-    // DynamoDB entry
+    // It's a new push
     const dbClient = new AWS.DynamoDB.DocumentClient();
     let dbParams = {
         Item: dbItem,
         TableName: dbName,
     }
-    console.log("PUSH dbParams",dbParams)
-
-    // push the DB entry
+    // Get the entry we just pushed as a way to test things and to get latest data.
     const tableItem = await dbClient.put(dbParams, function(err, data) {
         if (err) {
             console.log("DB PUSH ERROR",err);
@@ -270,7 +259,7 @@ async function addCustomer(dbName: string, customerData: {email: string, subId:s
             console.log("DB PUSH SUCCESS", data);
         };
     }).promise();
-    return getCustomer(dbName, customerData.email);
+    return getCustomer(dbName, newCustomerData.email);
 }
 
 const api = new awsx.apigateway.API("auth0-exercise-api", {

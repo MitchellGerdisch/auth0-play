@@ -52,6 +52,11 @@ const OrderForm = () => {
       if (isAuthenticated && firstTime) {
         setFirstTime(false)
         setIsLoading(true); // show spinny circle thing while data is collected.
+        if (!user.email_verified) {
+          alert(`NOTE: You cannot place an order until you verify your email, ${user.email}. Check your email for verification link.`)
+        }
+
+        console.log("Getting data for", user.email)
 
         // Get a fresh Auth0 token to call the backend.
         const auth0 = await createAuth0Client({
@@ -104,13 +109,14 @@ const OrderForm = () => {
         setIsLoading(true); // spinny thingy
 
         // Build data to push to the DB backend regardless of whether verified
-        const userInfo = {
+        // But only send fields that have values entered.
+        let userInfo = {
           "email": user.email,
           "subId": user.sub,
+          "salutation": salutation,
           "lastName": lastName,
           "firstName": firstName,
-          "phone": phone,
-          "salutation": salutation,
+          "phone": phone
         }
 
         // Will be used to push data to the DB
@@ -187,6 +193,7 @@ const OrderForm = () => {
   }
 
   // Build the order form once the user has logged in.
+  const isEnabled = firstName.length > 0 && lastName.length > 0 && phone.length > 0;
   return (
     isAuthenticated && (
     <Container className={styles.form}>
@@ -224,7 +231,7 @@ const OrderForm = () => {
         <input
           type="text"
           defaultValue={firstName}
-          onBlur={e => {
+          onChange={e => {
             setFirstName(e.target.value)
           }}
         />
@@ -234,7 +241,7 @@ const OrderForm = () => {
         <input
           type="text"
           defaultValue={lastName}
-          onBlur={e => {
+          onChange={e => {
             setLastName(e.target.value)
           }}
         />
@@ -244,13 +251,13 @@ const OrderForm = () => {
         <input
           type="text"
           defaultValue={phone}
-          onBlur={e => {
+          onChange={e => {
             setPhone(e.target.value)
           }}
         />
       </label>
 
-      <input type="submit" value="Submit" />
+      <button disabled={!isEnabled}>Submit Order</button>
     </Form>
     </Container>
   )

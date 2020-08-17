@@ -1,4 +1,8 @@
 # Auth0 Exercise
+## How to Use
+Once the back and front ends are up and running (see their respective READMEs), point your browser at the frontend's address.
+From there, you can click the login button and login or sign up and "order a pizza."
+
 ## Front End
 * The front-end comprises a node.js SPA.
 * The main bits of code can be found in frontend/src/OrderForm.js

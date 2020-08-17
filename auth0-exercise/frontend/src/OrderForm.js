@@ -256,7 +256,15 @@ const OrderForm = () => {
           }}
         />
       </label>
-
+      <label>
+        Email:
+        <input
+          readOnly
+          style={{width: "370px"}}
+          type="text"
+          defaultValue={user.email}
+        />
+      </label>
       <button disabled={!isEnabled}>Submit Order</button>
     </Form>
     </Container>
